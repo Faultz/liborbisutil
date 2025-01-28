@@ -52,6 +52,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <CppExceptions>true</CppExceptions>
       <CppLanguageStd>Cpp17</CppLanguageStd>
+      <AdditionalIncludeDirectories>..\dependencies\StubMaker\include;..\dependencies\fmtlib\fmtlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <Addressing>NonAslr</Addressing>
@@ -64,11 +65,26 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\math.cpp" />
+    <ClCompile Include="src\network\http.cpp" />
+    <ClCompile Include="src\system\filesystem.cpp" />
+    <ClCompile Include="src\system\logger.cpp" />
+    <ClCompile Include="src\system\memory.cpp" />
+    <ClCompile Include="src\system\memory_allocators.cpp" />
+    <ClCompile Include="src\system\resolve.cpp" />
     <ClCompile Include="src\system\string.cpp" />
+    <ClCompile Include="src\system\thread.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\liborbisutil.h" />
+    <ClInclude Include="src\math.h" />
+    <ClInclude Include="src\network\http.h" />
+    <ClInclude Include="src\system\filesystem.h" />
+    <ClInclude Include="src\system\logger.h" />
+    <ClInclude Include="src\system\memory.h" />
+    <ClInclude Include="src\system\memory_allocators.h" />
+    <ClInclude Include="src\system\resolve.h" />
     <ClInclude Include="src\system\string.h" />
+    <ClInclude Include="src\system\thread.h" />
   </ItemGroup>
   <Import Condition="'$(ConfigurationType)' == 'Makefile' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets')" Project="$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

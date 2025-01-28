@@ -1,0 +1,6 @@
+[submodule "dependencies/StubMaker"]
+	path = dependencies/StubMaker
+	url = https://github.com/OSM-Made/StubMaker.git
+[submodule "dependencies/fmtlib"]
+	path = dependencies/fmtlib
+	url = https://github.com/Faultz/fmtlib.git

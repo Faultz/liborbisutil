@@ -58,16 +58,16 @@ namespace liborbisutil
 		}
 
 		template <typename ...Args>
-		std::string format(const std::string& fmt, Args... args)
+		std::string format(std::string fmt, Args... args)
 		{
 			try
 			{
-				size_t size = std::snprintf(nullptr, 0, fmt.data(), args...) + 1;
+				size_t size = std::snprintf(nullptr, 0, fmt.c_str(), args...) + 1;
 				std::unique_ptr<char[]> buffer(new char[size]);
-				std::snprintf(buffer.get(), size, fmt.data(), args...);
+				std::snprintf(buffer.get(), size, fmt.c_str(), args...);
 				return std::string(buffer.get(), buffer.get() + size - 1);
 			}
-			catch (std::exception e)
+			catch (std::exception& e)
 			{
 				printf("Failed to format string: %s\n", e.what());
 				return {};
@@ -75,14 +75,14 @@ namespace liborbisutil
 		}
 
 		template<typename ...Args>
-		std::string va(const std::string& fmt, Args... args)
+		std::string va(std::string fmt, Args... args)
 		{
 			return format(fmt, args...);
 		}
 
 
 		template <typename ...Args>
-		std::wstring format(const std::wstring& fmt, Args... args)
+		std::wstring format(std::wstring fmt, Args... args)
 		{
 			try
 			{

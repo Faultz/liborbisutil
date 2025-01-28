@@ -149,24 +149,31 @@ namespace liborbisutil
 
 		const char** vector_to_pointer_array(const std::vector<std::string>& strings)
 		{
-			std::unique_ptr<const char* []> buffer(new const char* [strings.size() + 1]);
-			for (size_t i = 0; i < strings.size(); i++)
+			std::vector<const char*> buf;
+			buf.clear();
+
+			for (auto& str : strings)
 			{
-				buffer[i] = strings[i].c_str();
+				buf.push_back(str.c_str());
 			}
-			buffer[strings.size()] = nullptr;
-			return buffer.get();
+
+			return buf.data();
 		}
 
-		std::vector<std::string> pointer_array_to_vector(const char* const* strings)
+		std::vector<std::string> pointer_array_to_vector(const char* const* strings, std::size_t count)
 		{
-			std::vector<std::string> buffer;
-			for (size_t i = 0; strings[i] != nullptr; i++)
+			std::vector<std::string> buf;
+			buf.clear();
+
+			for (int i = 0; i < count; i++)
 			{
-				if(strings[i])
-					buffer.push_back(strings[i]);
+				if (strings[i])
+				{
+					buf.push_back(strings[i]);
+				}
 			}
-			return buffer;
+
+			return buf;
 		}
 
 		bool is_numeric(const std::string& str)
