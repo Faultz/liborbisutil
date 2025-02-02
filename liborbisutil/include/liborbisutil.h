@@ -13,6 +13,7 @@
 #include <queue>
 #include <condition_variable>
 #include <future>
+#include <csetjmp>
 
 #include <gnmx.h>
 #include <kernel.h>
@@ -23,6 +24,7 @@
 #include <fmt/os.h>
 
 #include <libhttp.h>
+#include <net.h>
 
 #define LIBORBISUTIL_HTTP_CTX_DEFAULT -1
 
@@ -68,15 +70,15 @@ namespace liborbisutil
 			const char* get_color(level lvl);
 			const char* get_prefix(level lvl);
 
-			// Log a message with the specified level
+			// Log a message with the specified level, file, and line
 			template <typename... Args>
-			void log(level lvl, std::string format, Args... args);
+			void log(level lvl, const char* file, int line, std::string format, Args... args);
 		}
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-security"
 		template<typename ...Args>
-		void internal::log(level lvl, std::string format, Args ...args)
+		void internal::log(level lvl, const char* file, int line, std::string format, Args ...args)
 		{
 			try
 			{
@@ -88,8 +90,8 @@ namespace liborbisutil
 				std::unique_ptr<char[]> buffer(new char[size]);
 				snprintf(buffer.get(), size, format.c_str(), args...);
 
-				// Format the message using string::format
-				std::string full_str = "[" + color + std::string(prefix) + "\033[0m] " + buffer.get();
+				// Format the message to include file and line information
+				std::string full_str = "[" + color + std::string(prefix) + "/" + std::string(file) + ":" + std::to_string(line) + "\033[0m] " + buffer.get();
 
 				printf("%s", full_str.c_str());
 			}
@@ -100,49 +102,60 @@ namespace liborbisutil
 		}
 #pragma clang diagnostic pop
 
-		// Log a message with the specified level
+		// Log a message with the specified level, file, and line
 		template <typename... Args>
-		void info(std::string format, Args... args)
+		void info(const char* file, int line, std::string format, Args... args)
 		{
-			internal::log(internal::info, format, args...);
+			internal::log(internal::info, file, line, format, args...);
 		}
 
 		template <typename... Args>
-		void success(std::string format, Args... args)
+		void success(const char* file, int line, std::string format, Args... args)
 		{
-			internal::log(internal::success, format, args...);
+			internal::log(internal::success, file, line, format, args...);
 		}
 
 		template <typename... Args>
-		void warning(std::string format, Args... args)
+		void warning(const char* file, int line, std::string format, Args... args)
 		{
-			internal::log(internal::warning, format, args...);
-		}
-		template <typename... Args>
-		void error(std::string format, Args... args)
-		{
-			internal::log(internal::error, format, args...);
+			internal::log(internal::warning, file, line, format, args...);
 		}
 
 		template <typename... Args>
-		void debug(std::string format, Args... args)
+		void error(const char* file, int line, std::string format, Args... args)
 		{
-			internal::log(internal::debug, format, args...);
+			internal::log(internal::error, file, line, format, args...);
 		}
 
 		template <typename... Args>
-		void verbose(std::string format, Args... args)
+		void debug(const char* file, int line, std::string format, Args... args)
 		{
-			internal::log(internal::verbose, format, args...);
+			internal::log(internal::debug, file, line, format, args...);
 		}
 
-		// Log a message with the specified level
 		template <typename... Args>
-		void log(internal::level lvl, std::string format, Args... args)
+		void verbose(const char* file, int line, std::string format, Args... args)
 		{
-			internal::log(lvl, format, args...);
+			internal::log(internal::verbose, file, line, format, args...);
+		}
+
+		// Log a message with the specified level, file, and line
+		template <typename... Args>
+		void log(internal::level lvl, const char* file, int line, std::string format, Args... args)
+		{
+			internal::log(lvl, file, line, format, args...);
 		}
 	}
+
+	#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+	// Macros to simplify logging calls
+	#define LOG_INFO(format, ...) liborbisutil::logger::info(__FILENAME__, __LINE__, format, ##__VA_ARGS__)
+	#define LOG_SUCCESS(format, ...) liborbisutil::logger::success(__FILENAME__, __LINE__, format, ##__VA_ARGS__)
+	#define LOG_WARNING(format, ...) liborbisutil::logger::warning(__FILENAME__, __LINE__, format, ##__VA_ARGS__)
+	#define LOG_ERROR(format, ...) liborbisutil::logger::error(__FILENAME__, __LINE__, format, ##__VA_ARGS__)
+	#define LOG_DEBUG(format, ...) liborbisutil::logger::debug(__FILENAME__, __LINE__, format, ##__VA_ARGS__)
+	#define LOG_VERBOSE(format, ...) liborbisutil::logger::verbose(__FILENAME__, __LINE__, format, ##__VA_ARGS__)
+	#define LOG(level, format, ...) liborbisutil::logger::log(level, __FILENAME__, __LINE__, format, ##__VA_ARGS__)
 
 	namespace string
 	{
@@ -560,26 +573,40 @@ namespace liborbisutil
 		};
 
 		bool query(uintptr_t address, region& out);
-		bool change_protection(uintptr_t address, size_t size, int prot);
+		bool protect(uintptr_t address, size_t size, int prot, int* prev);
+
+		void write(uintptr_t address, const void* buffer, size_t size);
+		void read(uintptr_t address, void* buffer, size_t size);
 
 		// Template for reading data
 		template <typename T>
 		T read(uintptr_t address)
 		{
 			T value;
-			read(address, &value, sizeof(T));
+			read(address, reinterpret_cast<void*>(&value), sizeof(T));
 			return value;
+		}
+
+		template<class T = uint8_t>
+		std::vector<T> read(uintptr_t address, size_t size)
+		{
+			std::vector<T> buffer(size);
+			read(address, buffer.data(), size);
+			return buffer;
 		}
 
 		// Template for writing data
 		template <typename T>
-		void write(uintptr_t address, const T& value)
+		void write(uintptr_t address, const T& value, size_t count = 0)
 		{
-			write(address, &value, sizeof(T));
+			write(address, reinterpret_cast<const void*>(&value), sizeof(T) * count);
 		}
 
-		void write(uintptr_t address, const void* buffer, size_t size);
-		void read(uintptr_t address, void* buffer, size_t size);
+		template<class T = uint8_t>
+		void write(uintptr_t address, const std::vector<T>& buffer)
+		{
+			write(address, buffer.data(), buffer.size());
+		}
 	}
 
 	namespace resolve
@@ -1000,5 +1027,191 @@ namespace liborbisutil
 
 		bool initialize(int http_context_override = LIBORBISUTIL_HTTP_CTX_DEFAULT);
 		void finalize();
+	}
+
+	enum socket_type
+	{
+		tcp,
+		udp
+	};
+
+	class socket
+	{
+	public:
+		socket() = default;
+		socket(const std::string& ip, uint16_t port, socket_type type = tcp);
+		socket(uint32_t ip, uint16_t port, socket_type type = tcp);
+
+		bool connect();
+		void close();
+		bool receive(void* buffer, size_t length);
+		bool send(const void* buffer, size_t length);
+
+		bool is_connected() const { return connected; };
+	private:
+		int fd;
+		bool connected;
+		uint32_t ip;
+		uint16_t port;
+		socket_type type;
+		SceNetSockaddrIn server_addr;
+	};
+
+	namespace exception
+	{
+		struct exception_info
+		{
+			std::string message;
+			std::string module;
+			std::string function;
+			uintptr_t address;
+			SceDbgUcontext context;
+		};
+
+		struct exception_action
+		{
+			int type;
+			std::function<void(int, siginfo_t*, SceDbgUcontext*)> callback;
+			bool log;
+		};
+
+		namespace handler
+		{
+			inline jmp_buf recovery_point;
+			inline std::unordered_map<int, exception_action> actions;
+
+			void register_action(int type, std::function<void(int, siginfo_t*, SceDbgUcontext*)> callback, bool log);
+			void unregister_action(int type);
+		}
+	}
+
+	namespace hook
+	{
+		class detour
+		{
+		public:
+			detour() = default;
+			detour(void* target, void* replace);
+			detour(uintptr_t target, void* replace);
+			~detour();
+
+			void enable() const;
+			void disable() const;
+
+			void create(void* target, void* replace);
+			void create(uintptr_t target, void* replace);
+			void clear();
+
+			template <typename T>
+			T* get() const
+			{
+				return static_cast<T*>(this->get_original());
+			}
+
+			template<typename R = void, typename... Args>
+			R invoke(Args... args)
+			{
+				return reinterpret_cast<R(*)(Args...)>(this->original)(args...);
+			}
+
+			void* get_original() const;
+			bool is_created() const { return this->created; }
+		private:
+			void* target;
+			void* replace;
+			void* original;
+
+			bool created;
+		};
+
+		class manager
+		{
+		public:
+			manager() = default;
+			~manager();
+
+			bool create(const std::string& name, void* target, void* replace);
+			bool create(const std::string& name, const std::string& module, const std::string& function, void* replace);
+
+			bool remove(const std::string& name);
+			void clear();
+
+			detour* get(const std::string& name);
+
+			template<typename R>
+			bool create(const std::string& name, void* target, R replace)
+			{
+				return create(name, target, reinterpret_cast<void*>(replace));
+			}
+
+			template<typename R>
+			bool create(const std::string& name, uintptr_t target, R replace)
+			{
+				return create(name, reinterpret_cast<void*>(target), reinterpret_cast<void*>(replace));
+			}
+
+			template<typename R>
+			bool create(const std::string& name, const std::string& module, const std::string& function, R replace)
+			{
+				return create(name, module, function, reinterpret_cast<void*>(replace));
+			}
+
+			template<typename R = void, typename... Args>
+			R invoke(const std::string& name, Args... args)
+			{
+				return reinterpret_cast<R(*)(Args...)>(this->get(name)->get_original())(args...);
+			}
+		private:
+			std::unordered_map<std::string, std::unique_ptr<detour>> hooks;
+		};
+
+		template <typename T>
+		static void set(void* place, T value)
+		{
+			int prot;
+			memory::protect(reinterpret_cast<uintptr_t>(place), sizeof(T), SCE_KERNEL_PROT_CPU_ALL, &prot);
+
+			*static_cast<T*>(place) = value;
+
+			memory::protect(reinterpret_cast<uintptr_t>(place), sizeof(T), prot, &prot);
+		}
+	}
+
+	namespace patcher
+	{
+		struct info
+		{
+			info(uintptr_t address)
+				: address(address), set(false)
+			{
+			}
+
+			bool is_set();
+
+			void enable();
+			void disable();
+			void toggle();
+			void restore();
+
+			uintptr_t address;
+			std::vector<uint8_t> original;
+			std::vector<uint8_t> patched;
+			bool set;
+		};
+
+		void enable(const std::string& name);
+		void disable(const std::string& name);
+		void toggle(const std::string& name);
+		void restore(const std::string& name);
+
+		info* get(const std::string& name);
+
+		info* nop(const std::string& name, const std::string& module, uint64_t offset, size_t size);
+		info* nop(const std::string& name, uintptr_t address, size_t size);
+
+		info* create(const std::string& name, const std::string& module, uint64_t offset, const std::vector<uint8_t>& patched, const bool set = false);
+		info* create(const std::string& name, uintptr_t address, const std::vector<uint8_t>& patched, const bool set = false);
+
+		void remove(const std::string& name);
 	}
 }
