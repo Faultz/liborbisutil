@@ -520,7 +520,7 @@ namespace liborbisutil
 			template<typename T>
 			T* allocate(const size_t count)
 			{
-				return static_cast<T*>(Allocate(sizeof(T) * count, 0));
+				return static_cast<T*>(allocate(sizeof(T) * count, 0));
 			}
 
 			void* allocate(size_t size, const std::string& name = "");
@@ -543,7 +543,7 @@ namespace liborbisutil
 			template<typename T>
 			T* allocate(const size_t count, size_t alignment = 16)
 			{
-				return static_cast<T*>(Allocate(sizeof(T) * count, alignment));
+				return static_cast<T*>(allocate(sizeof(T) * count, alignment));
 			}
 
 			void* allocate(size_t size, size_t alignment = 16, const std::string& name = "");
