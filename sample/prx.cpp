@@ -2,7 +2,10 @@
 #include "liborbisutil.h"
 
 #include <assert.h>
+#include <csetjmp>
 #include <iostream>
+
+#include "minhook.h"
 
 // We need to provide an export to force the expected stub library to be generated
 __declspec (dllexport) void dummy()
@@ -158,81 +161,125 @@ private:
 
 void run_log_tests()
 {
-    liborbisutil::logger::info("This is an info message\n");
-    liborbisutil::logger::error("This is an error message\n");
-    liborbisutil::logger::warning("This is a warning message\n");
-    liborbisutil::logger::success("This is a success message\n");
-    liborbisutil::logger::debug("This is a debug message\n");
-    liborbisutil::logger::verbose("This is a verbose message\n");
+    LOG_INFO("This is an info message\n");
+    LOG_ERROR("This is an error message\n");
+    LOG_WARNING("This is a warning message\n");
+    LOG_SUCCESS("This is a success message\n");
+    LOG_DEBUG("This is a debug message\n");
 }
 
 void run_thread_tests()
 {
-
     liborbisutil::thread_pool::initialize();
 
-    auto worker = liborbisutil::thread_pool::push([]() {
-        liborbisutil::logger::info("Worker thread is running\n");
+    auto work = liborbisutil::thread_pool::push([]() {
+        LOG_INFO("Worker thread is running\n");
         });
 
-    worker.get();
+    work.get();
 
     liborbisutil::thread_pool::finalize();
 
     liborbisutil::threading::create("test_thread", [](void* arg) -> void* {
-        liborbisutil::logger::info("Thread is running\n");
+        LOG_INFO("Thread is running\n");
 
         return nullptr;
         }, true);
 
     liborbisutil::thread thr([]() {
 
-        liborbisutil::logger::info("new thread is running\n");
+        LOG_INFO("new thread is running\n");
         }, "test");
 
     thr.join();
 
     auto all_threads = liborbisutil::threading::get_threads();
 
-    liborbisutil::logger::info("All threads:\n");
+    LOG_INFO("All threads:\n");
     for (auto thr : all_threads)
     {
-        liborbisutil::logger::info("\t[%i]%s\n", thr->tid, liborbisutil::threading::get_name(thr).c_str());
+        LOG_INFO("\t[%i]%s\n", thr->tid, liborbisutil::threading::get_name(thr).c_str());
     }
 
     auto current_thread = liborbisutil::threading::get_current();
-    liborbisutil::logger::info("Current thread: %s\n", liborbisutil::threading::get_name(current_thread).c_str());
+    LOG_INFO("Current thread: %s\n", liborbisutil::threading::get_name(current_thread).c_str());
 
     auto thread_by_id = liborbisutil::threading::get_by_id(all_threads[0]->tid);
-    liborbisutil::logger::info("Thread by ID: %s\n", liborbisutil::threading::get_name(thread_by_id).c_str());
+    LOG_INFO("Thread by ID: %s\n", liborbisutil::threading::get_name(thread_by_id).c_str());
 
     auto thread_by_name = liborbisutil::threading::get_by_name(liborbisutil::threading::get_name(all_threads[0]));
-    liborbisutil::logger::info("Thread by name: %s\n", liborbisutil::threading::get_name(thread_by_name).c_str());
+    LOG_INFO("Thread by name: %s\n", liborbisutil::threading::get_name(thread_by_name).c_str());
 }
 
 void run_http_tests()
 {
+    liborbisutil::http::initialize();
+
 	auto response = liborbisutil::http::get("https://httpbin.org/get");
-	liborbisutil::logger::info("GET Response: %s\n", response.data.c_str());
+	LOG_INFO("GET Response: %s\n", response.data.c_str());
 	response = liborbisutil::http::post("https://httpbin.org/post", "Hello, World!");
-	liborbisutil::logger::info("POST Response: %s\n", response.data.c_str());
+	LOG_INFO("POST Response: %s\n", response.data.c_str());
 	response = liborbisutil::http::download("https://httpbin.org/image/png", "/data/test.png");
     if(response.success)
 	{
-		liborbisutil::logger::info("Downloaded image to /data/test.png\n");
+		LOG_INFO("Downloaded image to /data/test.png\n");
 	}
 	else
 	{
-		liborbisutil::logger::error("Failed to download image\n");
+		LOG_ERROR("Failed to download image\n");
 	}
 
     // put
 	response = liborbisutil::http::put("https://httpbin.org/put", "Hello, World!");
-	liborbisutil::logger::info("PUT Response: %s\n", response.data.c_str());
+	LOG_INFO("PUT Response: %s\n", response.data.c_str());
 
 	// delete
 	response = liborbisutil::http::del("https://httpbin.org/delete");
-	liborbisutil::logger::info("DELETE Response: %s\n", response.data.c_str());
+	LOG_INFO("DELETE Response: %s\n", response.data.c_str());
+
+    liborbisutil::http::finalize();
+}
+
+void run_sockets_test()
+{
+	liborbisutil::socket sock("httpbin.org", 80);
+
+    if (sock.connect())
+    {
+		LOG_INFO("Connected to server\n");
+
+		// create post request
+		std::string request = "GET /get HTTP/1.1\r\nHost: httpbin.org\r\nConnection: close\r\n\r\n";
+
+		// send request
+		sock.send(request.data(), request.size());
+
+		// receive response
+		char buffer[2048];
+		sock.receive(buffer, sizeof(buffer));
+
+		LOG_INFO("Response:\n%s\n", buffer);
+
+		sock.close();
+    }
+    else
+    {
+        LOG_ERROR("Failed to connect to server\n");
+    }
+}
+
+liborbisutil::hook::manager hook_manager;
+
+void function_original()
+{
+    LOG_INFO("Function is original\n");
+}
+
+void function_hook()
+{
+	LOG_INFO("Function is hooked\n");
+
+    hook_manager.invoke("function_original");
 }
 
 extern "C" 
@@ -249,13 +296,21 @@ extern "C"
             //run_log_tests();
             //run_thread_tests();
 
-            liborbisutil::http::initialize();
+            //run_http_tests();
+            //run_sockets_test();
 
-            run_http_tests();
+            MH_Initialize();
 
-			liborbisutil::http::finalize();
+			hook_manager.create("function_original", reinterpret_cast<void*>(function_original), function_hook);
+
+            function_original();
+            hook_manager.clear();
+
+			MH_Uninitialize();
 
 			}, "tests");
+
+        thr.join();
 
 		return 0;
 	}
