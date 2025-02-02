@@ -1,5 +1,7 @@
 #include "memory_allocators.h"
 
+#include "logger.h"
+
 namespace liborbisutil
 {
 	namespace memory
@@ -326,12 +328,12 @@ namespace liborbisutil
 			auto res = sceKernelMunmap(MapStart, Size);
 			if (res < 0)
 			{
-				printf("[mapped_allocator]: Failed to unmap memory: 0x%X\n", res);
+				LOG_ERROR("[mapped_allocator]: Failed to unmap memory: 0x%X\n", res);
 				return;
 			}
 
 #ifdef _DEBUG
-			printf("[mapped_allocator]: Unmapped memory at 0x%lX\n", reinterpret_cast<uintptr_t>(MapStart));
+			LOG_DEBUG("[mapped_allocator]: Unmapped memory at 0x%lX\n", reinterpret_cast<uintptr_t>(MapStart));
 #endif
 
 			Initialised = false;
@@ -345,7 +347,7 @@ namespace liborbisutil
 
 			if (size <= 0)
 			{
-				printf("[mapped_allocator]: Size is 0\n");
+				LOG_ERROR("[mapped_allocator]: Size is 0\n");
 				return;
 			}
 
@@ -353,13 +355,13 @@ namespace liborbisutil
 			auto res = sceKernelMmap(reinterpret_cast<void*>(address), size, protection, flags, -1, 0, &mappedAddress);
 			if (res < 0)
 			{
-				printf("[mapped_allocator]: Failed to map memory: 0x%X\n", res);
+				LOG_ERROR("[mapped_allocator]: Failed to map memory: 0x%X\n", res);
 				return;
 			}
 
 			if (mappedAddress == nullptr)
 			{
-				printf("[mapped_allocator]: Address is null\n");
+				LOG_ERROR("[mapped_allocator]: Address is null\n");
 				return;
 			}
 
@@ -368,11 +370,11 @@ namespace liborbisutil
 			Initialised = true;
 		}
 
-		void* mapped_allocator::Allocate(size_t size, const std::string& name)
+		void* mapped_allocator::allocate(size_t size, const std::string& name)
 		{
 			if (!Initialised)
 			{
-				printf("[mapped_allocator]: Not initialised\n");
+				LOG_ERROR("[mapped_allocator]: Not initialised\n");
 				return nullptr;
 			}
 
@@ -382,7 +384,7 @@ namespace liborbisutil
 				CurrentSize -= size;
 				if (CurrentSize < 0)
 				{
-					printf("[mapped_allocator]: Overallocated memory\n");
+					LOG_ERROR("[mapped_allocator]: Overallocated memory\n");
 				}
 
 				return ptr;
@@ -405,22 +407,18 @@ namespace liborbisutil
 			auto res = sceKernelMunmap(MapStart, Size);
 			if (res < 0)
 			{
-				printf("Failed to unmap memory: 0x%X\n", res);
+				LOG_ERROR("Failed to unmap memory: 0x%X\n", res);
 			}
 
-#ifdef _DEBUG
-			printf("[direct_memory_allocator]: Unmapped memory at 0x%08lX\n", reinterpret_cast<uintptr_t>(MapStart));
-#endif
+			LOG_DEBUG("[direct_memory_allocator]: Unmapped memory at 0x%08lX\n", reinterpret_cast<uintptr_t>(MapStart));
 
 			res = sceKernelReleaseDirectMemory(Start, Size);
 			if (res < 0)
 			{
-				printf("[direct_memory_allocator]: Failed to release memory: 0x%X\n", res);
+				LOG_ERROR("[direct_memory_allocator]: Failed to release memory: 0x%X\n", res);
 			}
 
-#ifdef _DEBUG
-			printf("c Released memory\n");
-#endif
+			LOG_DEBUG("c Released memory\n");
 
 			Initialised = false;
 		}
@@ -434,7 +432,7 @@ namespace liborbisutil
 			auto res = sceKernelAllocateDirectMemory(0, SCE_KERNEL_MAIN_DMEM_SIZE + 50 * 1024 * 1024, size, 0, type, &Start);
 			if (res < 0)
 			{
-				printf("[direct_memory_allocator]: Failed to allocate memory: 0x%X\n", res);
+				LOG_ERROR("[direct_memory_allocator]: Failed to allocate memory: 0x%X\n", res);
 				return;
 			}
 
@@ -442,7 +440,7 @@ namespace liborbisutil
 			res = sceKernelMapNamedDirectMemory(&mapStart, size, protection, 0, Start, 0, name.data());
 			if (res < 0)
 			{
-				printf("[direct_memory_allocator]: Failed to map memory: 0x%X\n", res);
+				LOG_ERROR("[direct_memory_allocator]: Failed to map memory: 0x%X\n", res);
 				return;
 			}
 
@@ -453,11 +451,11 @@ namespace liborbisutil
 			Initialised = true;
 		}
 
-		void* direct_memory_alloactor::Allocate(size_t size, size_t alignment, const std::string& name)
+		void* direct_memory_alloactor::allocate(size_t size, size_t alignment, const std::string& name)
 		{
 			if (!Initialised)
 			{
-				printf("[direct_memory_allocator]: Not initialised\n");
+				LOG_ERROR("[direct_memory_allocator]: Not initialised\n");
 				return nullptr;
 			}
 
@@ -467,7 +465,7 @@ namespace liborbisutil
 				CurrentSize -= size;
 				if (CurrentSize < 0)
 				{
-					printf("[direct_memory_allocator]: Overallocated memory\n");
+					LOG_ERROR("[direct_memory_allocator]: Overallocated memory\n");
 				}
 
 				return ptr;
@@ -476,9 +474,9 @@ namespace liborbisutil
 			return nullptr;
 		}
 
-		void* direct_memory_alloactor::Allocate(const sce::Gnm::SizeAlign& sizeAlign, const std::string& name)
+		void* direct_memory_alloactor::allocate(const sce::Gnm::SizeAlign& sizeAlign, const std::string& name)
 		{
-			return Allocate(sizeAlign.m_size, sizeAlign.m_align, name);
+			return allocate(sizeAlign.m_size, sizeAlign.m_align, name);
 		}
 	}
 }

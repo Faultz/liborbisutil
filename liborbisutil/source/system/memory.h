@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-uintptr_t process_base_address;
+inline uintptr_t process_base_address;
 
 namespace liborbisutil
 {
