@@ -65,7 +65,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="source\debug\exception.cpp" />
     <ClCompile Include="source\hooking\manager.cpp" />
     <ClCompile Include="source\math.cpp" />
     <ClCompile Include="source\network\http.cpp" />
@@ -80,7 +79,6 @@
     <ClCompile Include="source\system\thread.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\debug\exception.h" />
     <ClInclude Include="source\hooking\manager.h" />
     <ClInclude Include="source\math.h" />
     <ClInclude Include="source\network\http.h" />

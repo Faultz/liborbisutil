@@ -19,7 +19,6 @@
     <ClCompile Include="source\system\string.cpp" />
     <ClCompile Include="source\system\thread.cpp" />
     <ClCompile Include="source\math.cpp" />
-    <ClCompile Include="source\debug\exception.cpp" />
     <ClCompile Include="source\hooking\manager.cpp" />
     <ClCompile Include="source\system\patcher.cpp" />
   </ItemGroup>
@@ -34,7 +33,6 @@
     <ClInclude Include="source\system\string.h" />
     <ClInclude Include="source\system\thread.h" />
     <ClInclude Include="source\math.h" />
-    <ClInclude Include="source\debug\exception.h" />
     <ClInclude Include="source\hooking\manager.h" />
     <ClInclude Include="source\system\patcher.h" />
   </ItemGroup>
