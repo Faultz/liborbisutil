@@ -418,7 +418,7 @@ namespace liborbisutil
 				LOG_ERROR("[direct_memory_allocator]: Failed to release memory: 0x%X\n", res);
 			}
 
-			LOG_DEBUG("c Released memory\n");
+			LOG_DEBUG("[direct_memory_allocator]: Released memory at 0x%08lX\n", Start);
 
 			Initialised = false;
 		}
