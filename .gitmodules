@@ -4,3 +4,6 @@
 [submodule "dependencies/fmtlib"]
 	path = dependencies/fmtlib
 	url = https://github.com/Faultz/fmtlib.git
+[submodule "dependencies/minhook"]
+	path = dependencies/minhook
+	url = https://github.com/Faultz/orbis-minhook.git
