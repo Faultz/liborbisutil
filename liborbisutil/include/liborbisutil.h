@@ -518,12 +518,12 @@ namespace liborbisutil
 			void initialize(size_t size, int protection = SCE_KERNEL_PROT_CPU_ALL, int flags = 0x1000 | 0x2, uintptr_t address = process_base_address);
 
 			template<typename T>
-			T* allocator(const size_t count)
+			T* allocate(const size_t count)
 			{
 				return static_cast<T*>(Allocate(sizeof(T) * count, 0));
 			}
 
-			void* Allocate(size_t size, const std::string& name = "");
+			void* allocate(size_t size, const std::string& name = "");
 
 			uintptr_t Base;
 			size_t Size;
@@ -541,13 +541,13 @@ namespace liborbisutil
 			void initialize(size_t size, SceKernelMemoryType type, std::string name = "", int protection = SCE_KERNEL_PROT_CPU_RW | SCE_KERNEL_PROT_GPU_RW);
 
 			template<typename T>
-			T* Allocate(const size_t count, size_t alignment = 16)
+			T* allocate(const size_t count, size_t alignment = 16)
 			{
 				return static_cast<T*>(Allocate(sizeof(T) * count, alignment));
 			}
 
-			void* Allocate(size_t size, size_t alignment = 16, const std::string& name = "");
-			void* Allocate(const sce::Gnm::SizeAlign& sizeAlign, const std::string& name = "");
+			void* allocate(size_t size, size_t alignment = 16, const std::string& name = "");
+			void* allocate(const sce::Gnm::SizeAlign& sizeAlign, const std::string& name = "");
 
 			off_t Start;
 			size_t End;
