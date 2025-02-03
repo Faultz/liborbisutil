@@ -82,6 +82,12 @@ namespace liborbisutil
 		bool is_pressed(uint32_t button);
 		bool is_released(uint32_t button);
 
+		inline float get_left_stick_x() { return left_stick.x; }
+		inline float get_left_stick_y() { return left_stick.y; }
+
+		inline float get_right_stick_x() { return right_stick.x; }
+		inline float get_right_stick_y() { return right_stick.y; }
+
 		void monitor(ScePadData* data);
 		void register_callback(state::hook id, std::function<void(ScePadData*, int)> cb);
 		void initialize(state::hook id, bool monitor, std::function<void(ScePadData*, int)> cb);
