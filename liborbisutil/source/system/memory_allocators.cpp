@@ -393,12 +393,12 @@ namespace liborbisutil
 			return nullptr;
 		}
 
-		direct_memory_alloactor::direct_memory_alloactor(size_t size, SceKernelMemoryType type, int protection, std::string name)
+		direct_memory_allocator::direct_memory_allocator(size_t size, SceKernelMemoryType type, int protection, std::string name)
 		{
 			initialize(size, type, name, protection);
 		}
 
-		direct_memory_alloactor::~direct_memory_alloactor()
+		direct_memory_allocator::~direct_memory_allocator()
 		{
 			clear();
 
@@ -423,7 +423,7 @@ namespace liborbisutil
 			Initialised = false;
 		}
 
-		void direct_memory_alloactor::initialize(size_t size, SceKernelMemoryType type, std::string name, int protection)
+		void direct_memory_allocator::initialize(size_t size, SceKernelMemoryType type, std::string name, int protection)
 		{
 			Name = name;
 			Size = size;
@@ -451,7 +451,7 @@ namespace liborbisutil
 			Initialised = true;
 		}
 
-		void* direct_memory_alloactor::allocate(size_t size, size_t alignment, const std::string& name)
+		void* direct_memory_allocator::allocate(size_t size, size_t alignment, const std::string& name)
 		{
 			if (!Initialised)
 			{
@@ -474,7 +474,7 @@ namespace liborbisutil
 			return nullptr;
 		}
 
-		void* direct_memory_alloactor::allocate(const sce::Gnm::SizeAlign& sizeAlign, const std::string& name)
+		void* direct_memory_allocator::allocate(const sce::Gnm::SizeAlign& sizeAlign, const std::string& name)
 		{
 			return allocate(sizeAlign.m_size, sizeAlign.m_align, name);
 		}

@@ -532,13 +532,13 @@ namespace liborbisutil
 			bool Initialised;
 			size_t CurrentSize;
 		};
-		class direct_memory_alloactor : public heap_allocator
+		class direct_memory_allocator : public heap_allocator
 		{
 		public:
-			direct_memory_alloactor() = default;
-			direct_memory_alloactor(size_t size, SceKernelMemoryType type, int protection = SCE_KERNEL_PROT_CPU_RW | SCE_KERNEL_PROT_GPU_RW, std::string name = "");
-			direct_memory_alloactor(const direct_memory_alloactor&) = delete;
-			virtual ~direct_memory_alloactor();
+			direct_memory_allocator() = default;
+			direct_memory_allocator(size_t size, SceKernelMemoryType type, int protection = SCE_KERNEL_PROT_CPU_RW | SCE_KERNEL_PROT_GPU_RW, std::string name = "");
+			direct_memory_allocator(const direct_memory_allocator&) = delete;
+			virtual ~direct_memory_allocator();
 
 			void initialize(size_t size, SceKernelMemoryType type, std::string name = "", int protection = SCE_KERNEL_PROT_CPU_RW | SCE_KERNEL_PROT_GPU_RW);
 
