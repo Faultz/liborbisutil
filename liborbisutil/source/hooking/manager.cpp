@@ -123,6 +123,8 @@ namespace liborbisutil
 				hook->enable();
 				return true;
 			}
+
+			return false;
 		}
 
 		bool manager::disable(const std::string& name)
@@ -133,6 +135,8 @@ namespace liborbisutil
 				hook->disable();
 				return true;
 			}
+
+			return false;
 		}
 
 		bool manager::remove(const std::string& name)
