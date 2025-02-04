@@ -1093,15 +1093,15 @@ namespace liborbisutil
 		{
 		public:
 			detour() = default;
-			detour(void* target, void* replace);
-			detour(uintptr_t target, void* replace);
+			detour(void* target, void* replace, bool enabled = false);
+			detour(uintptr_t target, void* replace, bool enabled = false);
 			~detour();
 
 			void enable() const;
 			void disable() const;
 
-			void create(void* target, void* replace);
-			void create(uintptr_t target, void* replace);
+			void create(void* target, void* replace, bool enabled = false);
+			void create(uintptr_t target, void* replace, bool enabled = false);
 			void clear();
 
 			template <typename T>
