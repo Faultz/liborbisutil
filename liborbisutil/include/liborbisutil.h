@@ -1135,6 +1135,9 @@ namespace liborbisutil
 			bool create(const std::string& name, void* target, void* replace);
 			bool create(const std::string& name, const std::string& module, const std::string& function, void* replace);
 
+			bool enable(const std::string& name);
+			bool disable(const std::string& name);
+
 			bool remove(const std::string& name);
 			void clear();
 

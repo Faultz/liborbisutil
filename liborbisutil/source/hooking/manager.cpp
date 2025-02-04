@@ -115,6 +115,26 @@ namespace liborbisutil
 			return create(name, reinterpret_cast<void*>(address), replace);
 		}
 
+		bool manager::enable(const std::string& name)
+		{
+			auto hook = get(name);
+			if (hook)
+			{
+				hook->enable();
+				return true;
+			}
+		}
+
+		bool manager::disable(const std::string& name)
+		{
+			auto hook = get(name);
+			if (hook)
+			{
+				hook->disable();
+				return true;
+			}
+		}
+
 		bool manager::remove(const std::string& name)
 		{
 			auto hook = hooks.find(name);
