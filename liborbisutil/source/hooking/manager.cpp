@@ -6,16 +6,16 @@ namespace liborbisutil
 {
 	namespace hook
 	{
-		detour::detour(void* target, void* replace)
+		detour::detour(void* target, void* replace, bool enabled)
 		{
 			this->original = nullptr;
-			this->create(target, replace);
+			this->create(target, replace, enabled);
 		}
 
-		detour::detour(uintptr_t target, void* replace)
+		detour::detour(uintptr_t target, void* replace, bool enabled)
 		{
 			this->original = nullptr;
-			this->create(target, replace);
+			this->create(target, replace, enabled);
 		}
 
 		detour::~detour()
@@ -45,7 +45,7 @@ namespace liborbisutil
 			}
 		}
 
-		void detour::create(void* target, void* replace)
+		void detour::create(void* target, void* replace, bool enabled)
 		{
 			this->target = target;
 			this->replace = replace;
@@ -62,12 +62,14 @@ namespace liborbisutil
 
 			this->created = true;
 			this->original = original_function;
-			this->enable();
+
+			if(enabled)
+				this->enable();
 		}
 
-		void detour::create(uintptr_t target, void* replace)
+		void detour::create(uintptr_t target, void* replace, bool enabled)
 		{
-			this->create(reinterpret_cast<void*>(target), replace);
+			this->create(reinterpret_cast<void*>(target), replace, enabled);
 		}
 
 		void detour::clear()
@@ -90,7 +92,7 @@ namespace liborbisutil
 
 		bool manager::create(const std::string& name, void* target, void* replace)
 		{
-			auto hook = std::make_unique<detour>(target, replace);
+			auto hook = std::make_unique<detour>(target, replace, false);
 			if (hook->is_created())
 			{
 				hooks[name] = std::move(hook);

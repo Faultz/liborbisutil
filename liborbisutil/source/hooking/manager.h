@@ -15,15 +15,15 @@ namespace liborbisutil
 		{
 		public:
 			detour() = default;
-			detour(void* target, void* replace);
-			detour(uintptr_t target, void* replace);
+			detour(void* target, void* replace, bool enabled = false);
+			detour(uintptr_t target, void* replace, bool enabled = false);
 			~detour();
 
 			void enable() const;
 			void disable() const;
 
-			void create(void* target, void* replace);
-			void create(uintptr_t target, void* replace);
+			void create(void* target, void* replace, bool enabled = false);
+			void create(uintptr_t target, void* replace, bool enabled = false);
 			void clear();
 
 			template <typename T>
@@ -56,6 +56,9 @@ namespace liborbisutil
 
 			bool create(const std::string& name, void* target, void* replace);
 			bool create(const std::string& name, const std::string& module, const std::string& function, void* replace);
+
+			bool enable(const std::string& name);
+			bool disable(const std::string& name);
 
 			bool remove(const std::string& name);
 			void clear();
