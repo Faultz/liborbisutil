@@ -133,6 +133,7 @@ namespace liborbisutil
 			{
 				hook.second->clear();
 			}
+
 			hooks.clear();
 		}
 		detour* manager::get(const std::string& name)

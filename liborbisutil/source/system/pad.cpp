@@ -204,10 +204,12 @@ namespace liborbisutil
 			{
 			case state::read:
 				detour_manager.create("scePadRead", scePadReadStateAddr, scePadReadState);
+				detour_manager.enable("scePadRead");
 				scePadRead_d = *detour_manager.get("scePadRead");
 				break;
 			case state::read_state:
 				detour_manager.create("scePadReadState", scePadReadStateAddr, scePadReadState);
+				detour_manager.enable("scePadReadState");
 				scePadReadState_d = *detour_manager.get("scePadReadState");
 				break;
 			default:
