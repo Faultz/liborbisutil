@@ -3,7 +3,28 @@
 #include <memory>
 #include <vector>
 
-inline uintptr_t process_base_address;
+#include <KernelExt.h>
+
+inline static uintptr_t process_base_address = []() -> uintptr_t {
+	if (process_base_address)
+		return process_base_address;
+
+	SceKernelModuleInfo processModuleInfo;
+	processModuleInfo.size = sizeof(SceKernelModuleInfo);
+	if (sceKernelGetModuleInfo(0, &processModuleInfo) < 0)
+	{
+		printf("Failed to get process module info\n");
+		return 0;
+	}
+
+	SceAppInfo appInfo;
+	sceKernelGetAppInfo(getpid(), &appInfo);
+
+	printf("loaded liborbisutil on %s\n", appInfo.TitleId);
+
+	return reinterpret_cast<uintptr_t>(processModuleInfo.segmentInfo->address);
+	}();
+
 
 namespace liborbisutil
 {
