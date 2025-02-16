@@ -43,7 +43,7 @@ namespace liborbisutil
 		bool freeze(ScePthread thread, bool freeze_user_ctx = true);
 		bool unfreeze(ScePthread thread, bool unfreeze_user_ctx = true);
 
-		std::vector<posix_thread*> freeze(bool freeze_user_ctx = true);
+		std::vector<posix_thread*> freeze(bool freeze_user_ctx = true, bool freeze_current = false);
 		void unfreeze(const std::vector<posix_thread*>& threads, bool unfreeze_user_ctx = true);
 
 		ScePthread create(const std::string& name, void* (*func)(void*), bool joinable, void* arg = nullptr);

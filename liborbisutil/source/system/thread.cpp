@@ -212,12 +212,16 @@ namespace liborbisutil
 			}
 		}
 
-		std::vector<posix_thread*> freeze(bool freeze_user_ctx)
+		std::vector<posix_thread*> freeze(bool freeze_user_ctx, bool freeze_current)
 		{
 			auto threads = get_threads();
 
 			for (auto thread : threads)
 			{
+				if(!freeze_current)
+					if (thread == get_current())
+						continue;
+
 				if (!freeze(reinterpret_cast<ScePthread>(thread), freeze_user_ctx))
 					threads.erase(std::remove(threads.begin(), threads.end(), thread), threads.end());
 			}
