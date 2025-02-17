@@ -53,6 +53,7 @@
       <CppExceptions>true</CppExceptions>
       <CppLanguageStd>Cpp17</CppLanguageStd>
       <AdditionalIncludeDirectories>..\dependencies\StubMaker\include;..\dependencies\fmtlib\fmtlib;..\dependencies\minhook\libMinhook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <Addressing>NonAslr</Addressing>

@@ -113,16 +113,16 @@ namespace liborbisutil
 		}
 
 		// Template for writing data
-		template <typename T>
-		void write(uintptr_t address, const T& value, size_t count = 0)
+		template <class T>
+		void write(uintptr_t address, T* value, size_t count = 0)
 		{
-			write(address, reinterpret_cast<const void*>(&value), sizeof(T) * count);
+			write(address, reinterpret_cast<const void*>(value), sizeof(T) * count);
 		}
 
 		template<class T = uint8_t>
 		void write(uintptr_t address, const std::vector<T>& buffer)
 		{
-			write(address, buffer.data(), buffer.size());
+			write(address, (T*)buffer.data(), buffer.size());
 		}
 	}
 }
