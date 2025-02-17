@@ -28,9 +28,40 @@
 
 #include <pad.h>
 
-#define LIBORBISUTIL_HTTP_CTX_DEFAULT -1
-
-using posix_thread = thread;
+#pragma comment(lib, "libSceLibcInternal_gen_stub_weak.a")
+#pragma comment(lib, "libkernel_gen_stub_weak.a")
+#pragma comment(lib, "libSceRtc_gen_stub_weak.a")
+#pragma comment(lib, "libSceSystemStateMgr_gen_stub_weak.a")
+#pragma comment(lib, "libSceSystemService_gen_stub_weak.a")
+#pragma comment(lib, "libSceSysCore_gen_stub_weak.a")
+#pragma comment(lib, "libSceUserService_gen_stub_weak.a")
+#pragma comment(lib, "libSceNet_gen_stub_weak.a")
+#pragma comment(lib, "libSceLncUtil_gen_stub_weak.a")
+#pragma comment(lib, "libScePad_stub_weak.a")
+#pragma comment(lib, "libSceRtc_stub_weak.a")
+#pragma comment(lib, "libSceVideoOut_stub_weak.a")
+#pragma comment(lib, "libSceDbg_stub_weak.a")
+#pragma comment(lib, "libSceNpWebApi_stub_weak.a")
+#pragma comment(lib, "libSceNpAuth_stub_weak.a")
+#pragma comment(lib, "libSceNpManager_stub_weak.a")
+#pragma comment(lib, "libSceImeDialog_stub_weak.a")
+#pragma comment(lib, "libSceAudioOut_stub_weak.a")
+#pragma comment(lib, "libSceAudioIn_stub_weak.a")
+#pragma comment(lib, "libSceVoice_stub_weak.a")
+#pragma comment(lib, "libSceSysmodule_stub_weak.a")
+#pragma comment(lib, "libSceHttp_stub_weak.a")
+#pragma comment(lib, "libSceSsl_stub_weak.a")
+#pragma comment(lib, "libSceNet_stub_weak.a")
+#pragma comment(lib, "libSceGameLiveStreaming_stub_weak.a")
+#pragma comment(lib, "libSceGnm_debug.a")
+#pragma comment(lib, "libSceGnmx_debug.a")
+#pragma comment(lib, "libSceGnmDriver_stub_weak.a")
+#pragma comment(lib, "libSceGnf_debug.a")
+#pragma comment(lib, "libSceGpuAddress.a")
+#pragma comment(lib, "libSceDbgVideoOut_stub_weak.a")
+#pragma comment(lib, "libScePm4Dump.a")
+#pragma comment(lib, "fmtlib.a")
+#pragma comment(lib, "libMinhook.a")
 
 #include "../source/system/logger.h"
 #include "../source/system/resolve.h"
