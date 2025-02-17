@@ -84,14 +84,18 @@ namespace liborbisutil
 
 		void write(uintptr_t address, const void* buffer, size_t size)
 		{
-			protect(address, size, SCE_KERNEL_PROT_CPU_ALL);
-			memcpy(reinterpret_cast<void*>(address), buffer, size);
+			int prev;
+			protect(address, size, SCE_KERNEL_PROT_CPU_ALL, &prev);
+			__builtin_memcpy(reinterpret_cast<void*>(address), buffer, size);
+			protect(address, size, prev);
 		}
 
 		void read(uintptr_t address, void* buffer, size_t size)
 		{
-			protect(address, size, SCE_KERNEL_PROT_CPU_ALL);
-			memcpy(buffer, reinterpret_cast<void*>(address), size);
+			int prev;
+			protect(address, size, SCE_KERNEL_PROT_CPU_ALL, &prev);
+			__builtin_memcpy(buffer, reinterpret_cast<void*>(address), size);
+			protect(address, size, prev);
 		}
 	}
 }
