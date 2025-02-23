@@ -142,6 +142,35 @@ namespace liborbisutil
 			return patch.get();
 		}
 
+		info* add(const std::string& name, const std::string& module, uint64_t offset, const std::vector<uint8_t>& patched, const bool set)
+		{
+			auto address = resolve::get_module_address(module);
+			if (!address)
+			{
+				LOG_ERROR("Failed to resolve export: %s\n", module.c_str());
+				return nullptr;
+			}
+
+			return add(name, address + offset, patched, set);
+		}
+
+		info* add(const std::string& name, uintptr_t address, const std::vector<uint8_t>& patched, const bool set)
+		{
+			std::vector<uint8_t> original_copy = memory::read(address, patched.size());
+
+			auto patch = std::make_shared<info>(address);
+			patch->original = original_copy;
+			patch->patched = patched;
+			patch->set = set;
+
+			internal::patches[name] = patch;
+
+			if (set)
+				patch->enable();
+
+			return patch.get();
+		}
+
 		void remove(const std::string& name)
 		{
 			auto it = internal::patches.find(name);

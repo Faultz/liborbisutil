@@ -40,6 +40,9 @@ namespace liborbisutil
 		info* create(const std::string& name, const std::string& module, uint64_t offset, const std::vector<uint8_t>& patched, const bool set = false);
 		info* create(const std::string& name, uintptr_t address, const std::vector<uint8_t>& patched, const bool set = false);
 
+		info* add(const std::string& name, const std::string& module, uint64_t offset, const std::vector<uint8_t>& patched, const bool set = false);
+		info* add(const std::string& name, uintptr_t address, const std::vector<uint8_t>& patched, const bool set = false);
+
 		void remove(const std::string& name);
 	}
 }
