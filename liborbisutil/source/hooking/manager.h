@@ -22,8 +22,9 @@ namespace liborbisutil
 			void enable() const;
 			void disable() const;
 
-			void create(void* target, void* replace, bool enabled = false);
-			void create(uintptr_t target, void* replace, bool enabled = false);
+			bool create(void* target, void* replace, bool enabled = false);
+			bool create(uintptr_t target, void* replace, bool enabled = false);
+			bool create(const std::string& name, const std::string& module, const std::string& function, void* replace, bool enable = false);
 			void clear();
 
 			template<typename R>
@@ -91,39 +92,39 @@ namespace liborbisutil
 			detour* get(const std::string& name);
 
 			template<typename R>
-			bool create(const std::string& name, void* target, R replace)
+			bool create(const std::string& name, void* target, R replace, bool enable = false)
 			{
-				return create(name, target, reinterpret_cast<void*>(replace));
+				return create(name, target, reinterpret_cast<void*>(replace), enable);
 			}
 
 			template<typename R>
-			bool create(const std::string& name, uintptr_t target, R replace)
+			bool create(const std::string& name, uintptr_t target, R replace, bool enable = false)
 			{
-				return create(name, reinterpret_cast<void*>(target), reinterpret_cast<void*>(replace));
+				return create(name, reinterpret_cast<void*>(target), reinterpret_cast<void*>(replace), enable);
 			}
 
 			template<typename R>
-			bool create(const std::string& name, const std::string& module, const std::string& function, R replace)
+			bool create(const std::string& name, const std::string& module, const std::string& function, R replace, bool enable = false)
 			{
-				return create(name, module, function, reinterpret_cast<void*>(replace));
+				return create(name, module, function, reinterpret_cast<void*>(replace), enable);
 			}
 
 			template<typename R>
-			bool add(const std::string& name, void* target, R replace)
+			bool add(const std::string& name, void* target, R replace, bool enable = false)
 			{
-				return create(name, target, reinterpret_cast<void*>(replace));
+				return create(name, target, reinterpret_cast<void*>(replace), enable);
 			}
 
 			template<typename R>
-			bool add(const std::string& name, uintptr_t target, R replace)
+			bool add(const std::string& name, uintptr_t target, R replace, bool enable = false)
 			{
-				return create(name, reinterpret_cast<void*>(target), reinterpret_cast<void*>(replace));
+				return create(name, reinterpret_cast<void*>(target), reinterpret_cast<void*>(replace), enable);
 			}
 
 			template<typename R>
-			bool add(const std::string& name, const std::string& module, const std::string& function, R replace)
+			bool add(const std::string& name, const std::string& module, const std::string& function, R replace, bool enable = false)
 			{
-				return create(name, module, function, reinterpret_cast<void*>(replace));
+				return create(name, module, function, reinterpret_cast<void*>(replace), enable);
 			}
 
 			template<typename R = void, typename... Args>

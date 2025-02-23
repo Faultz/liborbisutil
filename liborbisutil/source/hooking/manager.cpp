@@ -45,7 +45,7 @@ namespace liborbisutil
 			}
 		}
 
-		void detour::create(void* target, void* replace, bool enabled)
+		bool detour::create(void* target, void* replace, bool enabled)
 		{
 			this->target = target;
 			this->replace = replace;
@@ -55,7 +55,7 @@ namespace liborbisutil
 			if (status != MH_OK)
 			{
 				LOG_ERROR("Failed to create hook: %s\n", MH_StatusToString(status));
-				return;
+				return false;
 			}
 
 			LOG_SUCCESS("Hooked function at 0x%08llX\n", target);
@@ -65,11 +65,25 @@ namespace liborbisutil
 
 			if(enabled)
 				this->enable();
+
+			return true;
 		}
 
-		void detour::create(uintptr_t target, void* replace, bool enabled)
+		bool detour::create(uintptr_t target, void* replace, bool enabled)
 		{
-			this->create(reinterpret_cast<void*>(target), replace, enabled);
+			return this->create(reinterpret_cast<void*>(target), replace, enabled);
+		}
+
+		bool detour::create(const std::string& name, const std::string& module, const std::string& function, void* replace, bool enable)
+		{
+			auto address = resolve::get_export_address(module, function);
+			if (!address)
+			{
+				LOG_ERROR("Failed to resolve export: %s\n", function.c_str());
+				return false;
+			}
+			LOG_SUCCESS("Resolved export %s at 0x%08llX\n", function.c_str(), address);
+			return create(reinterpret_cast<void*>(address), replace);
 		}
 
 		void detour::clear()
@@ -109,7 +123,7 @@ namespace liborbisutil
 
 		bool manager::create(const std::string& name, uintptr_t target, void* replace, bool enable)
 		{
-			return create(name, reinterpret_cast<void*>(target), replace);
+			return create(name, reinterpret_cast<void*>(target), replace, enable);
 		}
 
 		bool manager::create(const std::string& name, const std::string& module, const std::string& function, void* replace, bool enable)
@@ -123,7 +137,7 @@ namespace liborbisutil
 
 			LOG_SUCCESS("Resolved export %s at 0x%08llX\n", function.c_str(), address);
 
-			return create(name, reinterpret_cast<void*>(address), replace);
+			return create(name, reinterpret_cast<void*>(address), replace, enable);
 		}
 
 		bool manager::enable(const std::string& name)
