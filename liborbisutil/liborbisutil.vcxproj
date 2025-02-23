@@ -70,6 +70,8 @@
     <ClCompile Include="source\math.cpp" />
     <ClCompile Include="source\network\http.cpp" />
     <ClCompile Include="source\network\sockets.cpp" />
+    <ClCompile Include="source\system\audio\player.cpp" />
+    <ClCompile Include="source\system\audio\wav.cpp" />
     <ClCompile Include="source\system\filesystem.cpp" />
     <ClCompile Include="source\system\logger.cpp" />
     <ClCompile Include="source\system\memory.cpp" />
@@ -85,6 +87,8 @@
     <ClInclude Include="source\math.h" />
     <ClInclude Include="source\network\http.h" />
     <ClInclude Include="source\network\sockets.h" />
+    <ClInclude Include="source\system\audio\player.h" />
+    <ClInclude Include="source\system\audio\wav.h" />
     <ClInclude Include="source\system\filesystem.h" />
     <ClInclude Include="source\system\logger.h" />
     <ClInclude Include="source\system\memory.h" />

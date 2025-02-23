@@ -41,6 +41,8 @@ namespace liborbisutil
 
 		bool is_loaded(int module);
 
+		uint64_t get_foreground_user();
+
 		template<typename T = uintptr_t>
 		T get_absolute_address(uintptr_t address, uintptr_t base = -1)
 		{
@@ -76,6 +78,5 @@ namespace liborbisutil
 		{
 			return (T)get_export_address(module, function);
 		}
-
 	}
 }

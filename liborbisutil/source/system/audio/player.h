@@ -1,0 +1,86 @@
+#pragma once
+
+#include <iostream>
+#include <algorithm>
+#include <string>
+#include <vector>
+#include <thread>
+#include <mutex>
+
+#include <atomic>
+
+#include "wav.h"
+
+namespace liborbisutil
+{
+	namespace audio
+	{
+		enum type
+		{
+			bgm = 1 << 0,
+			pad = 1 << 1
+		};
+
+		class track
+		{
+		public:
+			track() : volume(1.0f), loop(false), position(0), playing(false) {}
+
+			bool load(const std::string& filename);
+
+			void play();
+			void pause();
+			void stop();
+
+			void set_volume(float volume);
+			void set_loop(bool loop);
+
+			bool is_playing() const;
+			const std::vector<float>& get_samples() const;
+			size_t read_samples(float* buffer, size_t frames_to_read);
+		private:
+			bool decode();
+
+			void convert_pcm16(const int16_t* input, size_t frames,
+				uint16_t channels, std::vector<float>& output);
+			void convert_pcm24(const uint8_t* input, size_t frames,
+				uint16_t channels, std::vector<float>& output);
+			void convert_pcm32(const int32_t* input, size_t frames,
+				uint16_t channels, std::vector<float>& output);
+			void convert_float(const float* input, size_t frames,
+				uint16_t channels, std::vector<float>& output);
+			void convert_channels(const std::vector<float>& input,
+				uint16_t in_channels,
+				std::vector<float>& output);
+
+			wave file;
+			std::vector<float> samples;
+			std::atomic<float> volume;
+			std::atomic<bool> loop;
+			std::atomic<size_t> position;
+			std::atomic<bool> playing;
+		};
+
+		class player
+		{
+		public:
+			player() : main_handle(-1), pad_handle(-1), master_volume(1.0f), running(false) {}
+			~player();
+
+			bool initialize();
+			void shutdown();
+			void add_track(std::shared_ptr<track> track);
+			void set_master_volume(float volume);
+		private:
+			void audio_thread_main();
+
+			int main_handle;
+			int pad_handle;
+			std::atomic<float> master_volume;
+			std::mutex mutex;
+			std::thread audio_thread;
+			std::vector<std::shared_ptr<track>> tracks;
+			std::atomic<bool> running;
+		};
+	}
+}

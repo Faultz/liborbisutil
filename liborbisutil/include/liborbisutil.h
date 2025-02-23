@@ -79,3 +79,6 @@
 #include "../source/network/sockets.h"
 
 #include "../source/math.h"
+
+#include "../source/system/audio/wav.h"
+#include "../source/system/audio/player.h"

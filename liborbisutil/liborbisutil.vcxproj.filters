@@ -22,6 +22,8 @@
     <ClCompile Include="source\hooking\manager.cpp" />
     <ClCompile Include="source\system\patcher.cpp" />
     <ClCompile Include="source\system\pad.cpp" />
+    <ClCompile Include="source\system\audio\player.cpp" />
+    <ClCompile Include="source\system\audio\wav.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\network\http.h" />
@@ -37,5 +39,7 @@
     <ClInclude Include="source\hooking\manager.h" />
     <ClInclude Include="source\system\patcher.h" />
     <ClInclude Include="source\system\pad.h" />
+    <ClInclude Include="source\system\audio\player.h" />
+    <ClInclude Include="source\system\audio\wav.h" />
   </ItemGroup>
 </Project>

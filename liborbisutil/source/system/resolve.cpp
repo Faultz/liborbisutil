@@ -1,5 +1,6 @@
 #include "resolve.h"
 
+#include "UserServiceExt.h"
 
 namespace liborbisutil
 {
@@ -129,6 +130,13 @@ namespace liborbisutil
 		bool is_loaded(int module)
 		{
 			return sceSysmoduleIsLoaded(module) >= 0;
+		}
+
+		uint64_t get_foreground_user()
+		{
+			int userId;
+			sceUserServiceGetForegroundUser(&userId);
+			return userId;
 		}
 	}
 }

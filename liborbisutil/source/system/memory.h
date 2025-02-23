@@ -6,8 +6,9 @@
 #include <KernelExt.h>
 
 inline static uintptr_t process_base_address = []() -> uintptr_t {
-	if (process_base_address)
-		return process_base_address;
+	static uintptr_t base;
+	if (base)
+		return base;
 
 	SceKernelModuleInfo processModuleInfo;
 	processModuleInfo.size = sizeof(SceKernelModuleInfo);
@@ -22,7 +23,8 @@ inline static uintptr_t process_base_address = []() -> uintptr_t {
 
 	printf("loaded liborbisutil on %s\n", appInfo.TitleId);
 
-	return reinterpret_cast<uintptr_t>(processModuleInfo.segmentInfo->address);
+	base = reinterpret_cast<uintptr_t>(processModuleInfo.segmentInfo->address);
+	return base;
 	}();
 
 
