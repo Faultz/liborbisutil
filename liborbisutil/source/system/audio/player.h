@@ -32,12 +32,20 @@ namespace liborbisutil
 			void pause();
 			void stop();
 
+			void set_position(size_t position);
+
 			void set_volume(float volume);
 			void set_loop(bool loop);
 
 			bool is_playing() const;
+			size_t get_position() const { return position; }
+			size_t get_length() const { return samples.size(); }
 			const std::vector<float>& get_samples() const;
+			float get_volume() const { return volume; }
+
 			size_t read_samples(float* buffer, size_t frames_to_read);
+			
+			std::string fileName;
 		private:
 			bool decode();
 
@@ -71,15 +79,21 @@ namespace liborbisutil
 			void shutdown();
 			void add_track(std::shared_ptr<track> track);
 			void set_master_volume(float volume);
+
+			std::shared_ptr<track> get_track(const std::string& filename);
+
+			bool has_track(const std::string& filename) const;
+			bool is_initialized() const { return main_handle >= 0; }
+
+			std::mutex mutex;
+			std::vector<std::shared_ptr<track>> tracks;
 		private:
 			void audio_thread_main();
 
 			int main_handle;
 			int pad_handle;
 			std::atomic<float> master_volume;
-			std::mutex mutex;
 			std::thread audio_thread;
-			std::vector<std::shared_ptr<track>> tracks;
 			std::atomic<bool> running;
 		};
 	}

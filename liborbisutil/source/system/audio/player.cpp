@@ -14,6 +14,8 @@ namespace liborbisutil
 		{
 			if (!file.open(filename)) return false;
 			if (!decode()) return false;
+		
+			fileName = filename;
 			return true;
 		}
 		void track::play()
@@ -28,6 +30,10 @@ namespace liborbisutil
 		{
 			playing = false;
 			position = 0;
+		}
+		void track::set_position(size_t position)
+		{
+			this->position = position;
 		}
 		void track::set_volume(float volume)
 		{
@@ -251,7 +257,7 @@ namespace liborbisutil
 				0, 256, /*48000*/48000, SCE_AUDIO_OUT_PARAM_FORMAT_S16_STEREO);
 			if (main_handle < 0)
 			{
-				LOG_ERROR("sceAudioOutOpen failed: 0x%08X\n", main_handle);
+				LOG_ERROR("sceAudioOutOpen bgm failed: 0x%08X\n", main_handle);
 				return false;
 			}
 
@@ -259,7 +265,7 @@ namespace liborbisutil
 				0, 256, 48000, SCE_AUDIO_OUT_PARAM_FORMAT_S16_MONO);
 			if (pad_handle < 0)
 			{
-				LOG_ERROR("sceAudioOutOpen failed: 0x%08X\n", pad_handle);
+				LOG_ERROR("sceAudioOutOpen pad failed: 0x%08X\n", pad_handle);
 				return false;
 			}
 
@@ -313,8 +319,28 @@ namespace liborbisutil
 				| SCE_AUDIO_VOLUME_FLAG_RL_CH | SCE_AUDIO_VOLUME_FLAG_RR_CH
 				| SCE_AUDIO_VOLUME_FLAG_BL_CH | SCE_AUDIO_VOLUME_FLAG_BR_CH, vol);
 		}
-		constexpr static size_t BUFFER_FRAMES = 256;
 
+		std::shared_ptr<track> player::get_track(const std::string& filename)
+		{
+			for (auto& track : tracks)
+			{
+				if (track->fileName == filename)
+					return track;
+			}
+			return nullptr;
+		}
+
+		bool player::has_track(const std::string& filename) const
+		{
+			for (auto& track : tracks)
+			{
+				if (track->fileName == filename)
+					return true;
+			}
+			return false;
+		}
+
+		constexpr static size_t BUFFER_FRAMES = 256;
 		// Player implementation
 		void player::audio_thread_main() {
 			const size_t stereo_size = BUFFER_FRAMES * 2;
@@ -332,7 +358,8 @@ namespace liborbisutil
 				{
 					std::lock_guard<std::mutex> lock(mutex);
 					for (auto& track : tracks) {
-						if (track->is_playing()) {
+						if (track->is_playing())
+						{
 							track->read_samples(stereo_mix.data(), BUFFER_FRAMES);
 						}
 					}
