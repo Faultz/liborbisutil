@@ -26,6 +26,30 @@ namespace liborbisutil
 			void create(uintptr_t target, void* replace, bool enabled = false);
 			void clear();
 
+			template<typename R>
+			bool create(void* target, R replace, bool enabled = false)
+			{
+				return create(target, reinterpret_cast<void*>(replace), enabled);
+			}
+
+			template<typename R>
+			bool create(uintptr_t target, R replace, bool enabled = false)
+			{
+				return create(target, reinterpret_cast<void*>(replace), enabled);
+			}
+
+			template<typename R>
+			bool add(void* target, R replace, bool enabled = false)
+			{
+				return create(target, reinterpret_cast<void*>(replace), enabled);
+			}
+
+			template<typename R>
+			bool add(uintptr_t target, R replace, bool enabled = false)
+			{
+				return create(target, reinterpret_cast<void*>(replace), enabled);
+			}
+
 			template <typename T>
 			T* get() const
 			{
@@ -54,9 +78,9 @@ namespace liborbisutil
 			manager() = default;
 			~manager();
 
-			bool create(const std::string& name, void* target, void* replace);
-			bool create(const std::string& name, uintptr_t target, void* replace);
-			bool create(const std::string& name, const std::string& module, const std::string& function, void* replace);
+			bool create(const std::string& name, void* target, void* replace, bool enable = false);
+			bool create(const std::string& name, uintptr_t target, void* replace, bool enable = false);
+			bool create(const std::string& name, const std::string& module, const std::string& function, void* replace, bool enable = false);
 
 			bool enable(const std::string& name);
 			bool disable(const std::string& name);

@@ -90,25 +90,29 @@ namespace liborbisutil
 			this->clear();
 		}
 
-		bool manager::create(const std::string& name, void* target, void* replace)
+		bool manager::create(const std::string& name, void* target, void* replace, bool enable)
 		{
 			hooks[name] = std::make_unique<detour>();
 			auto hook = hooks[name].get();
-
 			hook->create(target, replace, false);
 			if (hook->is_created())
 			{
+				if (enable)
+				{
+					hook->enable();
+				}
+
 				return true;
 			}
 			return false;
 		}
 
-		bool manager::create(const std::string& name, uintptr_t target, void* replace)
+		bool manager::create(const std::string& name, uintptr_t target, void* replace, bool enable)
 		{
 			return create(name, reinterpret_cast<void*>(target), replace);
 		}
 
-		bool manager::create(const std::string& name, const std::string& module, const std::string& function, void* replace)
+		bool manager::create(const std::string& name, const std::string& module, const std::string& function, void* replace, bool enable)
 		{
 			auto address = resolve::get_export_address(module, function);
 			if (!address)
