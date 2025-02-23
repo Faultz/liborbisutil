@@ -55,6 +55,7 @@ namespace liborbisutil
 			~manager();
 
 			bool create(const std::string& name, void* target, void* replace);
+			bool create(const std::string& name, uintptr_t target, void* replace);
 			bool create(const std::string& name, const std::string& module, const std::string& function, void* replace);
 
 			bool enable(const std::string& name);
@@ -79,6 +80,24 @@ namespace liborbisutil
 
 			template<typename R>
 			bool create(const std::string& name, const std::string& module, const std::string& function, R replace)
+			{
+				return create(name, module, function, reinterpret_cast<void*>(replace));
+			}
+
+			template<typename R>
+			bool add(const std::string& name, void* target, R replace)
+			{
+				return create(name, target, reinterpret_cast<void*>(replace));
+			}
+
+			template<typename R>
+			bool add(const std::string& name, uintptr_t target, R replace)
+			{
+				return create(name, reinterpret_cast<void*>(target), reinterpret_cast<void*>(replace));
+			}
+
+			template<typename R>
+			bool add(const std::string& name, const std::string& module, const std::string& function, R replace)
 			{
 				return create(name, module, function, reinterpret_cast<void*>(replace));
 			}

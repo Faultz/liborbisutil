@@ -92,13 +92,20 @@ namespace liborbisutil
 
 		bool manager::create(const std::string& name, void* target, void* replace)
 		{
-			auto hook = std::make_unique<detour>(target, replace, false);
+			hooks[name] = std::make_unique<detour>();
+			auto hook = hooks[name].get();
+
+			hook->create(target, replace, false);
 			if (hook->is_created())
 			{
-				hooks[name] = std::move(hook);
 				return true;
 			}
 			return false;
+		}
+
+		bool manager::create(const std::string& name, uintptr_t target, void* replace)
+		{
+			return create(name, reinterpret_cast<void*>(target), replace);
 		}
 
 		bool manager::create(const std::string& name, const std::string& module, const std::string& function, void* replace)
