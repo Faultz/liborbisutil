@@ -63,7 +63,7 @@ namespace liborbisutil
 			const float t = current_buttons[button].duration;
 
 			if (repeat_rate == 0.0f)
-				return current_buttons[button].pressed;
+				return current_buttons[button].duration > 0.0f;
 
 			return (float)calc_repeat_amount(t, t - (1.f / 60.f), 0.f, repeat_rate) ? true : false;
 		}
