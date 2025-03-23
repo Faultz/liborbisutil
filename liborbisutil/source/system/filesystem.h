@@ -119,7 +119,7 @@ namespace liborbisutil
 		bool is_directory(const std::string& path);
 		bool exists(const std::string& path);
 		size_t get_size(const std::string& path);
-		bool create_directory(const std::string& path);
+		bool create_directory(const std::string& path, bool full_path = false);
 
 		int open(const std::string& path, int flags, int mode = 0777);
 		int close(int fd);

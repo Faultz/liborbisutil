@@ -566,7 +566,7 @@ namespace liborbisutil
 			return stat.st_size;
 		}
 
-		bool create_directory(const std::string& path)
+		bool create_directory(const std::string& path, bool full_path)
 		{
 			for (int i = 1; i < path.length(); i++)
 			{
@@ -585,7 +585,8 @@ namespace liborbisutil
 				}
 			}
 
-			sceKernelMkdir(path.c_str(), 0777);
+			if(full_path)
+				sceKernelMkdir(path.c_str(), 0777);
 
 			return true;
 		}
