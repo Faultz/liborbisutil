@@ -63,7 +63,7 @@ namespace liborbisutil
 			const float t = current_buttons[button].duration;
 
 			if (repeat_rate == 0.0f)
-				return current_buttons[button].pressed;
+				return current_buttons[button].duration > 0.0f;
 
 			return (float)calc_repeat_amount(t, t - (1.f / 60.f), 0.f, repeat_rate) ? true : false;
 		}
@@ -93,6 +93,17 @@ namespace liborbisutil
 
 		void updateTouchpadValues(ScePadData* padData)
 		{
+			uint32_t full_width = video_data->width;
+			uint32_t full_height = video_data->height;
+
+			for (int i = 0; i < SCE_PAD_MAX_TOUCH_NUM; i++)
+			{
+				float touchPosX = (float)padData->touchData.touch[i].x / full_width;
+				float touchPosY = (float)padData->touchData.touch[i].y / full_height;
+
+				touchPad[i].id = padData->touchData.touch[i].id;
+				touchPad[i].input = math::vector2(touchPosX, touchPosY);
+			}
 		}
 
 		void monitor(ScePadData* padData)

@@ -52,6 +52,12 @@ namespace liborbisutil
 			float duration;
 		};
 
+		struct touchpad_state
+		{
+			int id;
+			math::vector2 input;
+		};
+
 		inline hook::manager detour_manager;
 
 		inline hook::detour scePadRead_d;
@@ -78,6 +84,8 @@ namespace liborbisutil
 		inline float l2_pressure;
 		inline float r2_pressure;
 
+		inline touchpad_state touchPad[2];
+
 		bool is_down(uint32_t button, float repeat_rate = 0.0f);
 		bool is_pressed(uint32_t button);
 		bool is_released(uint32_t button);
@@ -87,6 +95,8 @@ namespace liborbisutil
 
 		inline float get_right_stick_x() { return right_stick.x; }
 		inline float get_right_stick_y() { return right_stick.y; }
+
+		inline touchpad_state get_touchpad(int id) { return touchPad[id]; }
 
 		void monitor(ScePadData* data);
 		void register_callback(state::hook id, std::function<void(ScePadData*, int)> cb);
