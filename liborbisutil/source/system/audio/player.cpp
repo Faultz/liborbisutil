@@ -81,13 +81,14 @@ namespace liborbisutil
 
 			while (samples_read < samples_to_read) {
 				if (position >= samples.size()) {
-					if (!loop.load()) {
-						// Zero remaining buffer space
-						std::memset(buffer + samples_read, 0,
-							(samples_to_read - samples_read) * sizeof(float));
-						break;
-					}
+					//if (!loop.load()) {
+					//	// Zero remaining buffer space
+					//	std::memset(buffer + samples_read, 0,
+					//		(samples_to_read - samples_read) * sizeof(float));
+					//	break;
+					//}
 					position = 0;
+					playing = false;
 				}
 
 				const size_t remaining = samples.size() - position;
@@ -239,7 +240,7 @@ namespace liborbisutil
 			shutdown();
 		}
 
-		bool player::initialize()
+		bool player::initialize(int flags)
 		{
 			int currentUserID = 0;
 			SceUserServiceLoginUserIdList list;
@@ -253,7 +254,7 @@ namespace liborbisutil
 				}
 			}
 
-			main_handle = sceAudioOutOpen(SCE_USER_SERVICE_USER_ID_SYSTEM, SCE_AUDIO_OUT_PORT_TYPE_BGM,
+			main_handle = sceAudioOutOpen(SCE_USER_SERVICE_USER_ID_SYSTEM, (flags & bgm) ? SCE_AUDIO_OUT_PORT_TYPE_BGM : SCE_AUDIO_OUT_PORT_TYPE_MAIN,
 				0, 256, /*48000*/48000, SCE_AUDIO_OUT_PARAM_FORMAT_S16_STEREO);
 			if (main_handle < 0)
 			{
@@ -261,16 +262,28 @@ namespace liborbisutil
 				return false;
 			}
 
-			pad_handle = sceAudioOutOpen(currentUserID, SCE_AUDIO_OUT_PORT_TYPE_PADSPK,
-				0, 256, 48000, SCE_AUDIO_OUT_PARAM_FORMAT_S16_MONO);
-			if (pad_handle < 0)
+
+			if (flags & pad)
 			{
-				LOG_ERROR("sceAudioOutOpen pad failed: 0x%08X\n", pad_handle);
-				return false;
+				pad_handle = sceAudioOutOpen(currentUserID, SCE_AUDIO_OUT_PORT_TYPE_PADSPK,
+					0, 256, 48000, SCE_AUDIO_OUT_PARAM_FORMAT_S16_MONO);
+				if (pad_handle < 0)
+				{
+					LOG_ERROR("sceAudioOutOpen pad failed: 0x%08X\n", pad_handle);
+					return false;
+				}
 			}
 
 			running = true;
 			audio_thread = std::thread(&player::audio_thread_main, this);
+			int cpu = 5;
+			const static uint cAllCoresMask = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5);
+			uint mask = (cpu >= 0) ? (1 << cpu) : cAllCoresMask;
+
+			auto native_handle = audio_thread.native_handle();
+			scePthreadSetaffinity(native_handle, mask);
+			SceKernelSchedParam p = { SCE_KERNEL_PRIO_FIFO_DEFAULT - 15 };
+			scePthreadSetschedparam(native_handle, SCE_KERNEL_SCHED_FIFO, &p);
 
 			return true;
 		}

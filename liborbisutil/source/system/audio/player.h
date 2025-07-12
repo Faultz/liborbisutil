@@ -18,7 +18,8 @@ namespace liborbisutil
 		enum type
 		{
 			bgm = 1 << 0,
-			pad = 1 << 1
+			main = 1 << 1,
+			pad = 1 << 2
 		};
 
 		class track
@@ -75,7 +76,7 @@ namespace liborbisutil
 			player() : main_handle(-1), pad_handle(-1), master_volume(1.0f), running(false) {}
 			~player();
 
-			bool initialize();
+			bool initialize(int flags = bgm);
 			void shutdown();
 			void add_track(std::shared_ptr<track> track);
 			void set_master_volume(float volume);
