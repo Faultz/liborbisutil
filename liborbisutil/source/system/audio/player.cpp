@@ -88,7 +88,10 @@ namespace liborbisutil
 					//	break;
 					//}
 					position = 0;
-					playing = false;
+
+					// Stop playback if not looping
+					if (!loop.load())
+						playing = false;
 				}
 
 				const size_t remaining = samples.size() - position;
