@@ -58,6 +58,8 @@ namespace liborbisutil
 				uint16_t channels, std::vector<float>& output);
 			void convert_float(const float* input, size_t frames,
 				uint16_t channels, std::vector<float>& output);
+			void convert_8ch_to_stereo(const std::vector<float>& input, size_t frames,
+				std::vector<float>& output);
 			void convert_channels(const std::vector<float>& input,
 				uint16_t in_channels,
 				std::vector<float>& output);

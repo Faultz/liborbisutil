@@ -254,12 +254,19 @@ namespace liborbisutil
 				}
 			}
 
-			main_handle = sceAudioOutOpen(SCE_USER_SERVICE_USER_ID_SYSTEM, (flags & bgm) ? SCE_AUDIO_OUT_PORT_TYPE_BGM : SCE_AUDIO_OUT_PORT_TYPE_MAIN,
-				0, 256, /*48000*/48000, SCE_AUDIO_OUT_PARAM_FORMAT_S16_STEREO);
+			main_handle = sceAudioOutOpen(SCE_USER_SERVICE_USER_ID_SYSTEM, SCE_AUDIO_OUT_PORT_TYPE_MAIN,
+				0, 256, /*48000*/48000, SCE_AUDIO_OUT_PARAM_FORMAT_FLOAT_8CH);
 			if (main_handle < 0)
 			{
-				LOG_ERROR("sceAudioOutOpen bgm failed: 0x%08X\n", main_handle);
-				return false;
+				LOG_ERROR("sceAudioOutOpen main failed: 0x%08X\n", main_handle);
+
+				main_handle = sceAudioOutOpen(currentUserID, SCE_AUDIO_OUT_PORT_TYPE_BGM,
+					0, 256, 48000, SCE_AUDIO_OUT_PARAM_FORMAT_FLOAT_8CH);
+				if (main_handle < 0)
+				{
+					LOG_ERROR("sceAudioOutOpen bgm failed: 0x%08X\n", main_handle);
+					return false;
+				}
 			}
 
 
@@ -378,14 +385,34 @@ namespace liborbisutil
 					}
 				}
 
-				// Convert to 16-bit stereo
-				for (size_t i = 0; i < stereo_size; i++) {
-					float sample = std::clamp(stereo_mix[i], -1.0f, 1.0f);
-					stereo_output[i] = static_cast<int16_t>(sample * 32767.0f);
+				float muiltichannel_buffer[BUFFER_FRAMES * 8 * sizeof(float)];
+
+				// Duplicate the mono channel to all 8 channels
+				for (int i = 0; i < stereo_size; ++i) {
+					// Extract left and right samples for the current frame
+					float left_sample = stereo_mix[i * 2];
+					float right_sample = stereo_mix[i * 2 + 1];
+
+					// Downmix to mono by averaging the left and right channels
+					float mono_sample = (left_sample + right_sample) / 2.0f;
+
+					// Duplicate the mono sample to all 8 channels for the current frame
+					for (int j = 0; j < 8; ++j) {
+						muiltichannel_buffer[i * 8 + j] = mono_sample;
+					}
 				}
 
 				// Submit to main output
-				sceAudioOutOutput(main_handle, stereo_output.data());
+				sceAudioOutOutput(main_handle, muiltichannel_buffer);
+
+				// Convert to 16-bit stereo
+				//for (size_t i = 0; i < stereo_size; i++) {
+				//	float sample = std::clamp(stereo_mix[i], -1.0f, 1.0f);
+				//	stereo_output[i] = static_cast<int16_t>(sample * 32767.0f);
+				//}
+
+				//// Submit to main output
+				//sceAudioOutOutput(main_handle, stereo_output.data());
 
 				// Handle pad output if connected
 				// Downmix to mono
@@ -398,7 +425,8 @@ namespace liborbisutil
 				}
 
 				// Submit to pad
-				if (pad_handle >= 0) {
+				if (pad_handle >= 0)
+				{
 					sceAudioOutOutput(pad_handle, mono_output.data());
 				}
 			}
