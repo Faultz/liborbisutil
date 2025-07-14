@@ -149,7 +149,7 @@ namespace liborbisutil
 		{
 			int res = scePadReadState_d.invoke<int>(handle, data);
 
-			if (handle != 0)
+			if (handle > 0)
 			{
 				if (should_monitor[state::read_state])
 					monitor(data);
@@ -165,7 +165,7 @@ namespace liborbisutil
 		{
 			int res = scePadRead_d.invoke<int>(handle, data, num);
 
-			if (handle != 0)
+			if (handle > 0)
 			{
 				if (should_monitor[state::read])
 					monitor(data);
