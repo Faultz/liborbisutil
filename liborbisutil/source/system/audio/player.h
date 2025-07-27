@@ -15,89 +15,110 @@ namespace liborbisutil
 {
 	namespace audio
 	{
-		enum type
-		{
-			bgm = 1 << 0,
-			main = 1 << 1,
-			pad = 1 << 2
-		};
+		// Forward-declare player to be used in track if needed
+		class player;
 
 		class track
 		{
 		public:
-			track() : volume(1.0f), loop(false), position(0), playing(false) {}
+			// New: Define the size of each audio chunk to be read from the file.
+			// This determines the memory usage per stream. 4096 frames is a reasonable default.
+			static constexpr size_t CHUNK_FRAMES = 4096;
 
+			track() = default;
+			~track();
+
+			// Public API - largely unchanged
 			bool load(const std::string& filename);
-
 			void play();
 			void pause();
 			void stop();
-
-			void set_position(size_t position);
-
+			void set_position(size_t frame_position);
 			void set_volume(float volume);
 			void set_loop(bool loop);
-
 			bool is_playing() const;
-			size_t get_position() const { return position; }
-			size_t get_length() const { return samples.size(); }
-			const std::vector<float>& get_samples() const;
-			float get_volume() const { return volume; }
 
-			size_t read_samples(float* buffer, size_t frames_to_read);
-			
 			std::string fileName;
+
 		private:
-			bool decode();
+			friend class player; // Allow player to access read_samples
 
-			void convert_pcm16(const int16_t* input, size_t frames,
-				uint16_t channels, std::vector<float>& output);
-			void convert_pcm24(const uint8_t* input, size_t frames,
-				uint16_t channels, std::vector<float>& output);
-			void convert_pcm32(const int32_t* input, size_t frames,
-				uint16_t channels, std::vector<float>& output);
-			void convert_float(const float* input, size_t frames,
-				uint16_t channels, std::vector<float>& output);
-			void convert_8ch_to_stereo(const std::vector<float>& input, size_t frames,
-				std::vector<float>& output);
-			void convert_channels(const std::vector<float>& input,
-				uint16_t in_channels,
-				std::vector<float>& output);
+			// This is now the core method for providing samples to the player.
+			// It reads from internal buffers and triggers decoding new chunks as needed.
+			size_t read_samples(float* buffer, size_t frames_to_read);
 
+			// New: Core streaming function to read and process the next block from the file.
+			bool decode_chunk();
+
+			// Helper methods for format conversion
+			void convert_pcm16(const int16_t* input, size_t frames, uint16_t channels, std::vector<float>& output);
+			void convert_pcm24(const uint8_t* input, size_t frames, uint16_t channels, std::vector<float>& output);
+			void convert_pcm32(const int32_t* input, size_t frames, uint16_t channels, std::vector<float>& output);
+			void convert_float(const float* input, size_t frames, uint16_t channels, std::vector<float>& output);
+			void convert_channels(const std::vector<float>& input, uint16_t in_channels, std::vector<float>& output);
+
+			// Thread-safe state variables
+			std::atomic<bool> playing = false;
+			std::atomic<bool> loop = false;
+			std::atomic<float> volume = 1.0f;
+
+			// File and stream management
 			wave file;
-			std::vector<float> samples;
-			std::atomic<float> volume;
-			std::atomic<bool> loop;
-			std::atomic<size_t> position;
-			std::atomic<bool> playing;
+			size_t current_frame_position = 0;
+			uintptr_t data_start_offset = 0;
+			size_t data_size = 0;
+
+			// Source audio format details
+			uint16_t source_format;
+			uint32_t source_sample_rate;
+			uint16_t source_channels;
+			uint16_t source_bps;
+
+			// Buffers for streaming and processing
+			std::vector<char> raw_buffer;        // Holds the raw data read from disk
+			std::vector<float> decoded_buffer;   // Holds float-converted data
+			std::vector<float> resampled_buffer; // Holds final, resampled stereo data ready for the player
+			size_t resampled_buffer_read_pos = 0;   // Current read position in resampled_buffer
 		};
 
 		class player
 		{
 		public:
-			player() : main_handle(-1), pad_handle(-1), master_volume(1.0f), running(false) {}
+			enum init_flags
+			{
+				main_only = 0,
+				pad = 1,
+			};
+
+			player() = default;
 			~player();
 
-			bool initialize(int flags = bgm);
+			bool initialize(int flags = main_only);
 			void shutdown();
+
 			void add_track(std::shared_ptr<track> track);
 			void set_master_volume(float volume);
 
 			std::shared_ptr<track> get_track(const std::string& filename);
-
 			bool has_track(const std::string& filename) const;
-			bool is_initialized() const { return main_handle >= 0; }
 
-			std::mutex mutex;
-			std::vector<std::shared_ptr<track>> tracks;
+			std::vector<std::shared_ptr<track>> get_tracks() const
+			{
+				return tracks;
+			}
+
 		private:
 			void audio_thread_main();
 
-			int main_handle;
-			int pad_handle;
-			std::atomic<float> master_volume;
 			std::thread audio_thread;
-			std::atomic<bool> running;
+			std::atomic<bool> running = false;
+			std::mutex mutex;
+
+			int main_handle = -1;
+			int pad_handle = -1;
+
+			std::vector<std::shared_ptr<track>> tracks;
+			std::atomic<float> master_volume = 1.0f;
 		};
 	}
 }

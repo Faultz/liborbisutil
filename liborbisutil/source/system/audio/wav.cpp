@@ -111,7 +111,7 @@ bool wave::find_riff(unsigned int chunkId, liborbisutil::file_system& fs, riff_c
 			return true;
 		}
 
-		offset += 4;
+		offset += 1;
 	}
 
 	return false;

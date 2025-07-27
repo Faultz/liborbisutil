@@ -10,165 +10,219 @@ namespace liborbisutil
 		constexpr uint32_t TARGET_SAMPLE_RATE = 48000;
 		constexpr uint16_t TARGET_CHANNELS = 2;
 
+		// New: Destructor to ensure file is closed
+		track::~track()
+		{
+			// The WaveFile object will close the file in its own destructor
+		}
+
 		bool track::load(const std::string& filename)
 		{
 			if (!file.open(filename)) return false;
-			if (!decode()) return false;
-		
+			if (!file.read_header()) return false;
+
+			// Store source audio format details
+			source_format = file.get_format();
+			source_sample_rate = file.get_sample_rate();
+			source_channels = file.get_channels();
+			source_bps = file.format.bits_per_sample;
+			data_start_offset = file.data.chunk_offset;
+			data_size = file.data.chunk_size;
+
+			// Check for valid format
+			if (source_bps == 0 || source_channels == 0)
+			{
+				LOG_ERROR("Invalid audio file header: %s\n", filename.c_str());
+				return false;
+			}
+
+			// Allocate buffers for processing one chunk at a time
+			const size_t raw_chunk_size = CHUNK_FRAMES * source_channels * (source_bps / 8);
+			raw_buffer.resize(raw_chunk_size);
+			decoded_buffer.resize(CHUNK_FRAMES * source_channels);
+
+			// Mark the processed buffer as empty so the first read triggers a decode
+			resampled_buffer_read_pos = 0;
+			resampled_buffer.clear();
+
 			fileName = filename;
 			return true;
 		}
+
 		void track::play()
 		{
 			playing = true;
 		}
+
 		void track::pause()
 		{
 			playing = false;
 		}
+
 		void track::stop()
 		{
 			playing = false;
-			position = 0;
+			// Reset position to the beginning of the stream
+			set_position(0);
 		}
-		void track::set_position(size_t position)
+
+		// set_position now seeks the frame position in the stream
+		void track::set_position(size_t frame_position)
 		{
-			this->position = position;
+			const size_t bytes_per_frame = source_channels * (source_bps / 8);
+			const size_t total_frames = data_size / bytes_per_frame;
+
+			// Clamp position to valid range
+			this->current_frame_position = std::min(frame_position, total_frames);
+
+			// Invalidate the current buffer to force a read from the new file position
+			resampled_buffer_read_pos = 0;
+			resampled_buffer.clear();
 		}
+
 		void track::set_volume(float volume)
 		{
 			this->volume = std::clamp(volume, 0.0f, 1.0f);
 		}
+
 		void track::set_loop(bool loop)
 		{
 			this->loop = loop;
 		}
+
 		bool track::is_playing() const
 		{
 			return playing;
 		}
-		const std::vector<float>& track::get_samples() const
-		{
-			return samples;
-		}
+
+		// The get_samples method is removed as it's not compatible with streaming.
+		// const std::vector<float>& track::get_samples() const;
 
 		void resample_audio(const std::vector<float>& input, uint32_t in_rate,
 			std::vector<float>& output, uint32_t out_rate,
 			uint16_t channels) {
-			const double ratio = static_cast<double>(in_rate) / out_rate;
-			const size_t out_size = static_cast<size_t>(input.size() * ratio);
-			output.resize(out_size);
+			if (in_rate == out_rate) {
+				output = input;
+				return;
+			}
 
-			for (size_t i = 0; i < out_size; i += channels) {
-				const double read_pos = i * ratio;
-				const size_t base = static_cast<size_t>(read_pos);
-				const double fraction = read_pos - base;
+			const double ratio = static_cast<double>(out_rate) / in_rate;
+			const size_t in_frames = input.size() / channels;
+			const size_t out_frames = static_cast<size_t>(in_frames * ratio);
+			output.resize(out_frames * channels);
 
-				for (uint16_t c = 0; c < channels; c++) {
-					const float s1 = input[std::min(base + c, input.size() - 1)];
-					const float s2 = input[std::min(base + channels + c, input.size() - 1)];
-					output[i + c] = s1 + fraction * (s2 - s1);
+			for (size_t i = 0; i < out_frames; ++i) {
+				const double in_frame_idx = i / ratio;
+				const size_t base_frame = static_cast<size_t>(in_frame_idx);
+				const double fraction = in_frame_idx - base_frame;
+
+				for (uint16_t c = 0; c < channels; ++c) {
+					const size_t base_idx = base_frame * channels + c;
+					const size_t next_idx = (base_frame + 1) * channels + c;
+
+					const float s1 = input[std::min(base_idx, input.size() - 1)];
+					const float s2 = input[std::min(next_idx, input.size() - 1)];
+
+					output[i * channels + c] = s1 + fraction * (s2 - s1);
 				}
 			}
 		}
 
+		// read_samples now reads from internal, refilling buffers from the file as needed.
 		size_t track::read_samples(float* buffer, size_t frames_to_read) {
 			if (!playing.load()) return 0;
 
 			const size_t samples_to_read = frames_to_read * TARGET_CHANNELS;
-			size_t samples_read = 0;
+			size_t samples_written = 0;
 			const float vol = volume.load();
 
-			while (samples_read < samples_to_read) {
-				if (position >= samples.size()) {
-					//if (!loop.load()) {
-					//	// Zero remaining buffer space
-					//	std::memset(buffer + samples_read, 0,
-					//		(samples_to_read - samples_read) * sizeof(float));
-					//	break;
-					//}
-					position = 0;
-
-					// Stop playback if not looping
-					if (!loop.load())
+			while (samples_written < samples_to_read) {
+				// If our processed buffer is exhausted, decode a new chunk from the file.
+				if (resampled_buffer_read_pos >= resampled_buffer.size()) {
+					if (!decode_chunk()) {
+						// Decoding failed, which means end of stream and not looping.
 						playing = false;
+						break; // Exit the while loop
+					}
 				}
 
-				const size_t remaining = samples.size() - position;
-				const size_t to_copy = std::min(remaining, samples_to_read - samples_read);
+				// Copy available samples from our internal buffer to the output buffer.
+				const size_t remaining_in_buffer = resampled_buffer.size() - resampled_buffer_read_pos;
+				const size_t samples_to_copy_now = std::min(remaining_in_buffer, samples_to_read - samples_written);
 
-				for (size_t i = 0; i < to_copy; i++) {
-					buffer[samples_read + i] += samples[position + i] * vol;
+				for (size_t i = 0; i < samples_to_copy_now; i++) {
+					buffer[samples_written + i] += resampled_buffer[resampled_buffer_read_pos + i] * vol;
 				}
 
-				samples_read += to_copy;
-				position += to_copy;
+				resampled_buffer_read_pos += samples_to_copy_now;
+				samples_written += samples_to_copy_now;
 			}
 
-			return samples_read / TARGET_CHANNELS;
+			// This part is important: if playback stopped mid-buffer, the remainder of the player's
+			// buffer must be zeroed to prevent leftover audio from playing.
+			if (samples_written < samples_to_read) {
+				std::memset(buffer + samples_written, 0, (samples_to_read - samples_written) * sizeof(float));
+			}
+
+			return samples_written / TARGET_CHANNELS;
 		}
 
-		bool track::decode() {
-			if (!file.read_header()) return false;
+		// New: This function reads and processes the next chunk of audio from the file.
+		bool track::decode_chunk() {
+			const size_t bytes_per_frame = source_channels * (source_bps / 8);
 
-			const auto format = file.get_format();
-			const auto sample_rate = file.get_sample_rate();
-			const auto channels = file.get_channels();
-			const auto bps = file.format.bits_per_sample;
+			// Check if we're at the end of the data chunk.
+			if ((current_frame_position * bytes_per_frame) >= data_size) {
+				if (loop.load()) {
+					current_frame_position = 0; // Seek back to the beginning for looping.
+				}
+				else {
+					return false; // End of stream.
+				}
+			}
 
-			// Read raw audio data
-			const uintptr_t offset = file.data.chunk_offset;
-			const size_t data_size = file.data.chunk_size;
-			std::vector<char> raw_data(data_size);
-			size_t read;
-			if (!file.read_data(offset, raw_data.data(), data_size, &read) || read != data_size) {
+			// Read a raw chunk from the file.
+			const size_t file_byte_pos = data_start_offset + (current_frame_position * bytes_per_frame);
+			const size_t remaining_bytes_in_file = data_size - (current_frame_position * bytes_per_frame);
+			const size_t bytes_to_read = std::min(remaining_bytes_in_file, raw_buffer.size());
+
+			size_t bytes_actually_read;
+			if (!file.read_data(file_byte_pos, raw_buffer.data(), bytes_to_read, &bytes_actually_read) || bytes_actually_read == 0) {
 				return false;
 			}
 
-			// Convert to normalized float format
-			const size_t frame_count = data_size / (channels * (bps / 8));
-			std::vector<float> raw_samples(frame_count * channels);
+			const size_t frames_read = bytes_actually_read / bytes_per_frame;
+			current_frame_position += frames_read;
 
-			switch (format) {
+			// Resize decoded buffer to match the number of frames we actually read.
+			decoded_buffer.resize(frames_read * source_channels);
+
+			// Convert the raw data to normalized float format.
+			switch (source_format) {
 			case 1: // PCM
-				switch (bps) {
-				case 16:
-					convert_pcm16(reinterpret_cast<int16_t*>(raw_data.data()),
-						frame_count, channels, raw_samples);
-					break;
-				case 24:
-					convert_pcm24((uint8_t*)raw_data.data(), frame_count, channels, raw_samples);
-					break;
-				case 32:
-					convert_pcm32(reinterpret_cast<int32_t*>(raw_data.data()),
-						frame_count, channels, raw_samples);
-					break;
+				switch (source_bps) {
+				case 16: convert_pcm16(reinterpret_cast<int16_t*>(raw_buffer.data()), frames_read, source_channels, decoded_buffer); break;
+				case 24: convert_pcm24((uint8_t*)raw_buffer.data(), frames_read, source_channels, decoded_buffer); break;
+				case 32: convert_pcm32(reinterpret_cast<int32_t*>(raw_buffer.data()), frames_read, source_channels, decoded_buffer); break;
 				default: return false;
 				}
 				break;
-
 			case 3: // Float
-				convert_float(reinterpret_cast<float*>(raw_data.data()),
-					frame_count, channels, raw_samples);
-				break;
-
+				convert_float(reinterpret_cast<float*>(raw_buffer.data()), frames_read, source_channels, decoded_buffer); break;
 			default: return false;
 			}
 
 			// Handle channel conversion
-			std::vector<float> channel_converted;
-			convert_channels(raw_samples, channels, channel_converted);
+			std::vector<float> channel_converted_chunk;
+			convert_channels(decoded_buffer, source_channels, channel_converted_chunk);
 
-			// Resample if needed
-			if (sample_rate != TARGET_SAMPLE_RATE) {
-				resample_audio(channel_converted, sample_rate,
-					samples, TARGET_SAMPLE_RATE, TARGET_CHANNELS);
-			}
-			else {
-				samples = std::move(channel_converted);
-			}
+			// Resample to the target rate. The resampled_buffer is the final destination.
+			resample_audio(channel_converted_chunk, source_sample_rate, resampled_buffer, TARGET_SAMPLE_RATE, TARGET_CHANNELS);
 
-			return true;
+			// Reset the read position for the newly filled buffer.
+			resampled_buffer_read_pos = 0;
+
+			return !resampled_buffer.empty();
 		}
 
 		void track::convert_pcm16(const int16_t* input, size_t frames,
@@ -216,27 +270,32 @@ namespace liborbisutil
 				return;
 			}
 
-			output.resize((input.size() / in_channels) * TARGET_CHANNELS);
+			const size_t in_frames = input.size() / in_channels;
+			output.resize(in_frames * TARGET_CHANNELS);
 
 			if (in_channels == 1) {
 				// Mono to stereo
-				for (size_t i = 0; i < input.size(); i++) {
+				for (size_t i = 0; i < in_frames; i++) {
 					output[i * 2] = input[i];
 					output[i * 2 + 1] = input[i];
 				}
 			}
 			else {
-				for (size_t i = 0; i < output.size() / TARGET_CHANNELS; i++) {
+				// Downmix multi-channel to stereo
+				for (size_t i = 0; i < in_frames; i++) {
 					float mix = 0.0f;
 					for (uint16_t c = 0; c < in_channels; c++) {
 						mix += input[i * in_channels + c];
 					}
 					mix /= in_channels;
-					output[i * 2] = mix;
-					output[i * 2 + 1] = mix;
+					output[i * TARGET_CHANNELS] = mix;
+					output[i * TARGET_CHANNELS + 1] = mix;
 				}
 			}
 		}
+
+		// The player class implementation below remains unchanged as its logic
+		// for mixing and outputting audio is independent of how the track gets its samples.
 
 		player::~player()
 		{
@@ -258,7 +317,7 @@ namespace liborbisutil
 			}
 
 			main_handle = sceAudioOutOpen(SCE_USER_SERVICE_USER_ID_SYSTEM, SCE_AUDIO_OUT_PORT_TYPE_MAIN,
-				0, 256, /*48000*/48000, SCE_AUDIO_OUT_PARAM_FORMAT_FLOAT_8CH);
+				0, 256, /*48000*/48000, SCE_AUDIO_OUT_PARAM_FORMAT_S16_STEREO);
 			if (main_handle < 0)
 			{
 				LOG_ERROR("sceAudioOutOpen main failed: 0x%08X\n", main_handle);
@@ -308,7 +367,7 @@ namespace liborbisutil
 			auto res = sceAudioOutClose(main_handle);
 			LOG_ERROR("sceAudioOutClose failed: 0x%08X\n", res);
 
-			main_handle = -1;
+			main_handle = -1; 
 
 			sceAudioOutOutput(pad_handle, nullptr);
 
@@ -377,45 +436,51 @@ namespace liborbisutil
 				// Clear buffers
 				std::fill(stereo_mix.begin(), stereo_mix.end(), 0.0f);
 
+				bool playing = false;
 				// Mix tracks into stereo buffer
 				{
 					std::lock_guard<std::mutex> lock(mutex);
 					for (auto& track : tracks) {
+
 						if (track->is_playing())
 						{
+							playing = true;
+
 							track->read_samples(stereo_mix.data(), BUFFER_FRAMES);
 						}
 					}
-				}
 
-				float muiltichannel_buffer[BUFFER_FRAMES * 8 * sizeof(float)];
-
-				// Duplicate the mono channel to all 8 channels
-				for (int i = 0; i < stereo_size; ++i) {
-					// Extract left and right samples for the current frame
-					float left_sample = stereo_mix[i * 2];
-					float right_sample = stereo_mix[i * 2 + 1];
-
-					// Downmix to mono by averaging the left and right channels
-					float mono_sample = (left_sample + right_sample) / 2.0f;
-
-					// Duplicate the mono sample to all 8 channels for the current frame
-					for (int j = 0; j < 8; ++j) {
-						muiltichannel_buffer[i * 8 + j] = mono_sample;
+					/// If no tracks are playing, idle
+					if (!playing) {
+						sceKernelUsleep(1000);
+						continue;
 					}
 				}
 
-				// Submit to main output
-				sceAudioOutOutput(main_handle, muiltichannel_buffer);
+				//float muiltichannel_buffer[BUFFER_FRAMES * 8 * sizeof(float)];
+				// Duplicate the mono channel to all 8 channels
+				//for (int i = 0; i < stereo_size; ++i) {
+				// 
+				//	// Extract left and right samples for the current frame
+				//	float left_sample = stereo_mix[i * 2];
+				//	float right_sample = stereo_mix[i * 2 + 1];
 
-				// Convert to 16-bit stereo
-				//for (size_t i = 0; i < stereo_size; i++) {
-				//	float sample = std::clamp(stereo_mix[i], -1.0f, 1.0f);
-				//	stereo_output[i] = static_cast<int16_t>(sample * 32767.0f);
+				//	// Downmix to mono by averaging the left and right channels
+				//	float mono_sample = (left_sample + right_sample) / 2.0f;
+
+				//	// Duplicate the mono sample to all 8 channels for the current frame
+				//	for (int j = 0; j < 8; ++j) {
+				//		muiltichannel_buffer[i * 8 + j] = mono_sample;
+				//	}
 				//}
 
-				//// Submit to main output
-				//sceAudioOutOutput(main_handle, stereo_output.data());
+				for (size_t i = 0; i < stereo_size; i++) {
+					float sample = std::clamp(stereo_mix[i], -1.0f, 1.0f);
+					stereo_output[i] = static_cast<int16_t>(sample * 32767.0f);
+				}
+
+				// Submit to main output
+				sceAudioOutOutput(main_handle, stereo_output.data());
 
 				// Handle pad output if connected
 				// Downmix to mono
