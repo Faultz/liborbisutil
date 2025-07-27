@@ -207,6 +207,10 @@ namespace liborbisutil
 			std::unique_lock<std::mutex> l(mtx);
 
 			auto it = chunks.find(ptr);
+			if (it == chunks.end())
+			{
+				return;
+			}
 
 			auto cur = it->second;
 			chunks.erase(it);

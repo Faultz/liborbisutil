@@ -141,7 +141,6 @@ namespace liborbisutil
 			void* allocate(const sce::Gnm::SizeAlign& sizeAlign, const std::string& name = "");
 
 			off_t Start;
-			size_t End;
 			bool Initialised;
 			SceKernelMemoryType Type;
 		};
