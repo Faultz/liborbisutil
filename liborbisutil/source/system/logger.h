@@ -5,8 +5,6 @@
 
 #include "string.h"
 
-#include <fmt/format.h>
-
 namespace liborbisutil
 {
 	namespace logger
