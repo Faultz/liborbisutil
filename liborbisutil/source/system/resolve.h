@@ -78,5 +78,21 @@ namespace liborbisutil
 		{
 			return (T)get_export_address(module, function);
 		}
+
+		template<typename T = uintptr_t>
+		T get_module_address(const std::string& module, uint64_t offset)
+		{
+			auto module_base = get_module_address<uintptr_t>(module);
+			if (!module_base)
+				return 0;
+
+			return reinterpret_cast<T>(module_base + offset);
+		}
+
+		template<typename T = uintptr_t>
+		T get_export_address(const std::string& module, uint64_t offset)
+		{
+			return get_module_address<T>(module, offset);
+		}
 	}
 }
