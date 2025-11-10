@@ -53,7 +53,7 @@ namespace liborbisutil
 		}
 
 		template<typename T = uintptr_t>
-		T get_module_address(const std::string& module)
+		T get_module_address(const std::string& module, uint64_t offset = 0)
 		{
 			auto library = sceKernelLoadStartModule(module.c_str(), 0, nullptr, 0, nullptr, nullptr);
 			if (library < 0)
@@ -70,23 +70,13 @@ namespace liborbisutil
 				return 0;
 			}
 
-			return reinterpret_cast<T>(moduleInfo.segmentInfo->address);
+			return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(moduleInfo.segmentInfo->address) + offset);
 		}
 
 		template<typename T = uintptr_t>
 		T get_module_address(const std::string& module, const std::string& function)
 		{
 			return (T)get_export_address(module, function);
-		}
-
-		template<typename T = uintptr_t>
-		T get_module_address(const std::string& module, uint64_t offset)
-		{
-			auto module_base = get_module_address<uintptr_t>(module);
-			if (!module_base)
-				return 0;
-
-			return reinterpret_cast<T>(module_base + offset);
 		}
 
 		template<typename T = uintptr_t>
