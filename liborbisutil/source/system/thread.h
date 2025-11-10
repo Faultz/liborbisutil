@@ -18,13 +18,31 @@ namespace liborbisutil
 	{
 	public:
 		thread() = default;
-		thread(void(*func)(), std::string name);
+		thread(void(*func)(void* arg), std::string name, void* data = nullptr, int priority = 0, bool detach = false);
+		~thread();
+		void stop();
 		void join();
 		void detach();
 		bool joinable() const;
+		bool is_running() const;
+		void* entry();
 		static void sleep(unsigned int ms);
+
+		static void* entry_point(void* arg);
+
+		enum state
+		{
+			running = 1
+		};
 	private:
 		ScePthread handle;
+		std::string name;
+		void(*thread_func)(void* arg);
+		void* thread_arg;
+		ScePthreadAttr attributes;
+		SceKernelEventFlag event_flag;
+		int error;
+
 		bool is_joinable;
 	};
 

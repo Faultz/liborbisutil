@@ -4,21 +4,51 @@
 
 namespace liborbisutil
 {
-	thread::thread(void(*func)(), std::string name)
+	thread::thread(void(*func)(void* arg), std::string name, void* data, int priority, bool detach)
 	{
-		int res = scePthreadCreate(&handle, nullptr, [](void* arg) -> void* {
-			if (arg)
-			{
-				auto func = reinterpret_cast<void(*)()>(arg);
-				func();
-			}
+		sceKernelCreateEventFlag(&event_flag, name.c_str(), SCE_KERNEL_EVF_ATTR_MULTI, 0, NULL);
+		error = scePthreadAttrInit(&attributes);
+		error = scePthreadAttrSetdetachstate(&attributes, detach ? SCE_PTHREAD_CREATE_DETACHED : SCE_PTHREAD_CREATE_JOINABLE);
+		error = scePthreadAttrSetschedpolicy(&attributes, SCE_KERNEL_SCHED_FIFO);
+		SceKernelSchedParam p = { 0 };
+		p.sched_priority = SCE_KERNEL_PRIO_FIFO_DEFAULT - priority;
+		error = scePthreadAttrSetschedparam(&attributes, &p);
 
-			scePthreadExit(0);
-			return nullptr;
-			}, reinterpret_cast<void*>(func), name.c_str());
+		this->name = name;
+		thread_func = func;
+		thread_arg = data;
+		if(!detach)
+			is_joinable = true;
+
+		handle = nullptr;
+
+		int res = scePthreadCreate(&handle, &attributes, entry_point, reinterpret_cast<void*>(this), name.c_str());
 		if (res < 0)
-		{
 			printf("scePthreadCreate failed: 0x%08X\n", res);
+
+		sceKernelSetEventFlag(event_flag, state::running);
+	}
+
+	thread::~thread()
+	{
+		if (handle)
+		{
+			if (is_running())
+			{
+				if (is_joinable)
+					join();
+			}
+		}
+
+		scePthreadAttrDestroy(&attributes);
+		sceKernelDeleteEventFlag(event_flag);
+	}
+
+	void thread::stop()
+	{
+		if (handle)
+		{
+			sceKernelClearEventFlag(event_flag, ~state::running);
 		}
 	}
 	void thread::join()
@@ -39,9 +69,36 @@ namespace liborbisutil
 	{
 		return is_joinable;
 	}
+	bool thread::is_running() const
+	{
+		return sceKernelPollEventFlag(event_flag, state::running, SCE_KERNEL_EVF_WAITMODE_AND, nullptr) == 0;
+	}
+
+	void* thread::entry()
+	{
+		error = sceKernelWaitEventFlag(event_flag, state::running, SCE_KERNEL_EVF_WAITMODE_AND, nullptr, nullptr);
+		if (error < 0)
+		{
+			LOG_ERROR("Failed to wait for event flag: 0x%08X\n", error);
+			return nullptr;
+		}
+
+		if (thread_func)
+		{
+			thread_func(thread_arg);
+		}
+
+		scePthreadExit(nullptr);
+		return nullptr;
+	}
 	void thread::sleep(unsigned int ms)
 	{
 		sceKernelUsleep(ms * 1000);
+	}
+
+	void* thread::entry_point(void* arg)
+	{
+		return static_cast<thread*>(arg)->entry();
 	}
 
 	namespace threading
