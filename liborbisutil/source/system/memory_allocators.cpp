@@ -300,9 +300,9 @@ namespace liborbisutil
 		{
 			clear();
 
-			memset(map_start, 0, Size);
+			memset(map_start, 0, cached_size);
 
-			auto res = sceKernelMunmap(map_start, Size);
+			auto res = sceKernelMunmap(map_start, cached_size);
 			if (res < 0)
 			{
 				LOG_ERROR("[mapped_allocator]: Failed to unmap memory: 0x%X\n", res);
@@ -318,9 +318,9 @@ namespace liborbisutil
 
 		void mapped_allocator::initialize(size_t size, int protection, int flags, uintptr_t address)
 		{
-			cached_size = size;
-			current_size = size;
-			base = address;
+			this->cached_size = size;
+			this->current_size = size;
+			this->base = address;
 
 			if (size <= 0)
 			{
@@ -402,11 +402,12 @@ namespace liborbisutil
 
 		void direct_memory_allocator::initialize(size_t size, SceKernelMemoryType type, std::string name, size_t end, int protection)
 		{
-			name = name;
-			cached_size = size;
-			current_size = size;
-			type = type;
-			auto res = sceKernelAllocateDirectMemory(0, SCE_KERNEL_MAIN_DMEM_SIZE + 50 * 1024 * 1024, size, 0, type, &start);
+			this->name = name;
+			this->cached_size = size;
+			this->current_size = size;
+			this->type = type;
+
+			auto res = sceKernelAllocateDirectMemory(0, end, size, 0, type, &start);
 			if (res < 0)
 			{
 				LOG_ERROR("[direct_memory_allocator]: Failed to allocate memory: 0x%X\n", res);
@@ -425,7 +426,7 @@ namespace liborbisutil
 
 			set(mapStart, size, name);
 
-			initialised = true;
+			this->initialised = true;
 		}
 
 		void* direct_memory_allocator::allocate(size_t size, size_t alignment, const std::string& name)
