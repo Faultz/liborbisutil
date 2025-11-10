@@ -8,7 +8,8 @@ namespace liborbisutil
 	{
 		sceKernelCreateEventFlag(&event_flag, name.c_str(), SCE_KERNEL_EVF_ATTR_MULTI, 0, NULL);
 		error = scePthreadAttrInit(&attributes);
-		error = scePthreadAttrSetdetachstate(&attributes, detach ? SCE_PTHREAD_CREATE_DETACHED : SCE_PTHREAD_CREATE_JOINABLE);
+		if(detach)
+			error = scePthreadAttrSetdetachstate(&attributes,SCE_PTHREAD_CREATE_DETACHED);
 		error = scePthreadAttrSetschedpolicy(&attributes, SCE_KERNEL_SCHED_FIFO);
 		SceKernelSchedParam p = { 0 };
 		p.sched_priority = SCE_KERNEL_PRIO_FIFO_DEFAULT - priority;
