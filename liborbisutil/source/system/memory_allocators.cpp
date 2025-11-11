@@ -32,34 +32,7 @@ namespace liborbisutil
 
 		void* allocator::reallocate(void* data, const size_t length)
 		{
-			// If the data is null, just allocate?
-			if (data == nullptr)
-			{
-				return allocate(length);
-			}
-
 			return nullptr;
-
-			//std::lock_guard<std::mutex> lock(Mutex);
-
-			//// Check if the pointers are managed by the allocator
-			//auto it = std::find(Pointers.begin(), Pointers.end(), data);
-			//if (it == Pointers.end()) {
-			//	throw std::invalid_argument("Pointer not managed by this allocator.");
-			//}
-
-			//void* newData = Allocate(length);
-			//if (!newData)
-			//	throw std::bad_alloc();
-
-			//std::memcpy(newData, data, length);
-
-			//Free(data);
-
-			//// Replace the old pointer with the new one in the tracking vector
-			//*it = newData;
-
-			//return newData;
 		}
 
 		void allocator::free(void* data)
@@ -107,10 +80,10 @@ namespace liborbisutil
 				delete free;
 			}
 
-			Size = size;
-			MapStart = start;
+			cached_size = size;
+			map_start = start;
 
-			if (MapStart == nullptr)
+			if (map_start == nullptr)
 			{
 				printf("HeapAllocator: Start is null\n");
 				return;
@@ -136,7 +109,7 @@ namespace liborbisutil
 			{
 				auto chunk = *it;
 
-				uintptr_t ptr = reinterpret_cast<uintptr_t>(chunk->m_ptr);
+				uintptr_t ptr = reinterpret_cast<uintptr_t>(chunk->ptr);
 
 				// Calculate the offset to align the pointer if alignment != 0
 				size_t offset = 0;
@@ -146,7 +119,7 @@ namespace liborbisutil
 					offset = alignedPtr - ptr;
 				}
 
-				if (chunk->m_size >= (size + offset))
+				if (chunk->size >= (size + offset))
 				{
 					Chunk* current = *it;
 
@@ -154,21 +127,21 @@ namespace liborbisutil
 
 
 					size_t begPtr = ptr + offset;
-					size_t endPtr = ptr + current->m_size;
+					size_t endPtr = ptr + current->size;
 					size_t newEnd = begPtr + size;
 
 					void* newBeg = reinterpret_cast<void*>(begPtr);
 
 					if (offset) // break off back as new chunk
 					{
-						auto prev = new Chunk(offset, current->m_ptr, current->m_prev, current);
-						if (current->m_prev)
+						auto prev = new Chunk(offset, current->ptr, current->prev, current);
+						if (current->prev)
 						{
-							current->m_prev->m_next = prev;
+							current->prev->next = prev;
 						}
-						current->m_prev = prev;
-						current->m_ptr = newBeg;
-						current->m_size -= offset;
+						current->prev = prev;
+						current->ptr = newBeg;
+						current->size -= offset;
 
 						free_chunks.insert(prev);
 					}
@@ -176,21 +149,21 @@ namespace liborbisutil
 					if (newEnd != endPtr) // break this off as a new chunk
 					{
 						auto next = current;
-						current = new Chunk(size, newBeg, next->m_prev, next);
-						if (current->m_prev)
+						current = new Chunk(size, newBeg, next->prev, next);
+						if (current->prev)
 						{
-							current->m_prev->m_next = current;
+							current->prev->next = current;
 						}
-						next->m_prev = current;
-						next->m_size = endPtr - newEnd;
-						next->m_ptr = reinterpret_cast<void*>(newEnd);
+						next->prev = current;
+						next->size = endPtr - newEnd;
+						next->ptr = reinterpret_cast<void*>(newEnd);
 
 						free_chunks.insert(next);
 					}
 
-					chunks[current->m_ptr] = current;
+					chunks[current->ptr] = current;
 
-					return current->m_ptr;
+					return current->ptr;
 				}
 			}
 			printf("HeapAllocator: Failed to allocate memory\n");
@@ -215,30 +188,30 @@ namespace liborbisutil
 			auto cur = it->second;
 			chunks.erase(it);
 
-			if (cur->m_prev)
+			if (cur->prev)
 			{
-				auto prevIt = free_chunks.find(cur->m_prev);
+				auto prevIt = free_chunks.find(cur->prev);
 				if (prevIt != free_chunks.end())
 				{
 					auto prev = *prevIt;
 					free_chunks.erase(prevIt);
 
-					if (cur->m_next)
+					if (cur->next)
 					{
-						auto nextIt = free_chunks.find(cur->m_next);
+						auto nextIt = free_chunks.find(cur->next);
 						if (nextIt != free_chunks.end())
 						{
 							auto next = *nextIt;
 
 							free_chunks.erase(nextIt);
 
-							next->m_size += cur->m_size + prev->m_size;
-							next->m_ptr = prev->m_ptr;
-							next->m_prev = prev->m_prev;
+							next->size += cur->size + prev->size;
+							next->ptr = prev->ptr;
+							next->prev = prev->prev;
 
-							if (next->m_prev)
+							if (next->prev)
 							{
-								next->m_prev->m_next = next;
+								next->prev->next = next;
 							}
 
 							free_chunks.insert(next);
@@ -250,12 +223,12 @@ namespace liborbisutil
 						}
 					}
 
-					prev->m_size += cur->m_size;
-					prev->m_next = cur->m_next;
+					prev->size += cur->size;
+					prev->next = cur->next;
 
-					if (prev->m_next)
+					if (prev->next)
 					{
-						prev->m_next->m_prev = prev;
+						prev->next->prev = prev;
 					}
 
 					free_chunks.insert(prev);
@@ -266,22 +239,22 @@ namespace liborbisutil
 				}
 			}
 
-			if (cur->m_next)
+			if (cur->next)
 			{
-				auto nextIt = free_chunks.find(cur->m_next);
+				auto nextIt = free_chunks.find(cur->next);
 				if (nextIt != free_chunks.end())
 				{
 					auto next = *nextIt;
 
 					free_chunks.erase(nextIt);
 
-					next->m_size += cur->m_size;
-					next->m_prev = cur->m_prev;
-					next->m_ptr = cur->m_ptr;
+					next->size += cur->size;
+					next->prev = cur->prev;
+					next->ptr = cur->ptr;
 
-					if (next->m_prev)
+					if (next->prev)
 					{
-						next->m_prev->m_next = next;
+						next->prev->next = next;
 					}
 
 					free_chunks.insert(next);
@@ -327,9 +300,9 @@ namespace liborbisutil
 		{
 			clear();
 
-			memset(MapStart, 0, Size);
+			memset(map_start, 0, cached_size);
 
-			auto res = sceKernelMunmap(MapStart, Size);
+			auto res = sceKernelMunmap(map_start, cached_size);
 			if (res < 0)
 			{
 				LOG_ERROR("[mapped_allocator]: Failed to unmap memory: 0x%X\n", res);
@@ -337,17 +310,17 @@ namespace liborbisutil
 			}
 
 #ifdef _DEBUG
-			LOG_DEBUG("[mapped_allocator]: Unmapped memory at 0x%lX\n", reinterpret_cast<uintptr_t>(MapStart));
+			LOG_DEBUG("[mapped_allocator]: Unmapped memory at 0x%lX\n", reinterpret_cast<uintptr_t>(map_start));
 #endif
 
-			Initialised = false;
+			initialised = false;
 		}
 
 		void mapped_allocator::initialize(size_t size, int protection, int flags, uintptr_t address)
 		{
-			Size = size;
-			CurrentSize = size;
-			Base = address;
+			this->cached_size = size;
+			this->current_size = size;
+			this->base = address;
 
 			if (size <= 0)
 			{
@@ -371,12 +344,12 @@ namespace liborbisutil
 
 			set(mappedAddress, size, "[mapped_allocator]");
 
-			Initialised = true;
+			initialised = true;
 		}
 
 		void* mapped_allocator::allocate(size_t size, const std::string& name)
 		{
-			if (!Initialised)
+			if (!initialised)
 			{
 				LOG_ERROR("[mapped_allocator]: Not initialised\n");
 				return nullptr;
@@ -385,8 +358,8 @@ namespace liborbisutil
 			auto ptr = heap_allocator::allocate(size, 0, name);
 			if (ptr)
 			{
-				CurrentSize -= size;
-				if (CurrentSize < 0)
+				current_size -= size;
+				if (current_size < 0)
 				{
 					LOG_ERROR("[mapped_allocator]: Overallocated memory\n");
 				}
@@ -397,43 +370,44 @@ namespace liborbisutil
 			return nullptr;
 		}
 
-		direct_memory_allocator::direct_memory_allocator(size_t size, SceKernelMemoryType type, int protection, std::string name)
+		direct_memory_allocator::direct_memory_allocator(size_t size, SceKernelMemoryType type, std::string name, size_t end, int protection)
 		{
-			initialize(size, type, name, protection);
+			initialize(size, type, name, end, protection);
 		}
 
 		direct_memory_allocator::~direct_memory_allocator()
 		{
 			clear();
 
-			memset(MapStart, 0, Size);
+			memset(map_start, 0, cached_size);
 
-			auto res = sceKernelMunmap(MapStart, Size);
+			auto res = sceKernelMunmap(map_start, cached_size);
 			if (res < 0)
 			{
 				LOG_ERROR("Failed to unmap memory: 0x%X\n", res);
 			}
 
-			LOG_DEBUG("[direct_memory_allocator]: Unmapped memory at 0x%08lX\n", reinterpret_cast<uintptr_t>(MapStart));
+			LOG_DEBUG("[direct_memory_allocator]: Unmapped memory at 0x%08lX\n", reinterpret_cast<uintptr_t>(map_start));
 
-			res = sceKernelReleaseDirectMemory(Start, Size);
+			res = sceKernelReleaseDirectMemory(start, cached_size);
 			if (res < 0)
 			{
 				LOG_ERROR("[direct_memory_allocator]: Failed to release memory: 0x%X\n", res);
 			}
 
-			LOG_DEBUG("[direct_memory_allocator]: Released memory at 0x%08lX\n", Start);
+			LOG_DEBUG("[direct_memory_allocator]: Released memory at 0x%08lX\n", start);
 
-			Initialised = false;
+			initialised = false;
 		}
 
-		void direct_memory_allocator::initialize(size_t size, SceKernelMemoryType type, std::string name, int protection)
+		void direct_memory_allocator::initialize(size_t size, SceKernelMemoryType type, std::string name, size_t end, int protection)
 		{
-			Name = name;
-			Size = size;
-			Type = type;
-			Size = CurrentSize = size;
-			auto res = sceKernelAllocateDirectMemory(0, SCE_KERNEL_MAIN_DMEM_SIZE + 50 * 1024 * 1024, size, 0, type, &Start);
+			this->name = name;
+			this->cached_size = size;
+			this->current_size = size;
+			this->type = type;
+
+			auto res = sceKernelAllocateDirectMemory(0, end, size, 0, type, &start);
 			if (res < 0)
 			{
 				LOG_ERROR("[direct_memory_allocator]: Failed to allocate memory: 0x%X\n", res);
@@ -441,7 +415,7 @@ namespace liborbisutil
 			}
 
 			void* mapStart = nullptr;
-			res = sceKernelMapNamedDirectMemory(&mapStart, size, protection, 0, Start, 0, name.data());
+			res = sceKernelMapNamedDirectMemory(&mapStart, size, protection, 0, start, 0, name.data());
 			if (res < 0)
 			{
 				LOG_ERROR("[direct_memory_allocator]: Failed to map memory: 0x%X\n", res);
@@ -452,12 +426,12 @@ namespace liborbisutil
 
 			set(mapStart, size, name);
 
-			Initialised = true;
+			this->initialised = true;
 		}
 
 		void* direct_memory_allocator::allocate(size_t size, size_t alignment, const std::string& name)
 		{
-			if (!Initialised)
+			if (!initialised)
 			{
 				LOG_ERROR("[direct_memory_allocator]: Not initialised\n");
 				return nullptr;
@@ -466,8 +440,8 @@ namespace liborbisutil
 			auto ptr = heap_allocator::allocate(size, alignment, name);
 			if (ptr)
 			{
-				CurrentSize -= size;
-				if (CurrentSize < 0)
+				current_size -= size;
+				if (current_size < 0)
 				{
 					LOG_ERROR("[direct_memory_allocator]: Overallocated memory\n");
 				}

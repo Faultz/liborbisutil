@@ -20,8 +20,9 @@ namespace liborbisutil
 	{
 	public:
 		socket() = default;
-		socket(const std::string& ip, uint16_t port, socket_type type = tcp);
-		socket(uint32_t ip, uint16_t port, socket_type type = tcp);
+		socket(const std::string& ip, uint16_t port, socket_type type);
+		socket(int fd, socket_type type);
+		socket(uint32_t ip, uint16_t port, socket_type type);
 		~socket() { close(); }
 
 		bool connect();

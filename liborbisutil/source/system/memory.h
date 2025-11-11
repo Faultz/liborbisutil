@@ -34,9 +34,10 @@ namespace liborbisutil
 	class symbol
 	{
 	public:
-		symbol(uintptr_t address, uintptr_t base = process_base_address) : address(address), base(base) {}
+		symbol<T>() : address(0), base(0) {}
+		symbol(uint64_t address, uint64_t base = process_base_address) : address(address), base(base) {}
 
-		T* get()
+		T* get() const
 		{
 			return reinterpret_cast<T*>(base + address);
 		}
@@ -51,22 +52,22 @@ namespace liborbisutil
 			return get();
 		}
 
-		constexpr symbol<T>& operator=(uintptr_t address)
+		constexpr symbol<T>& operator=(uint64_t address)
 		{
 			this->address = address;
 			return *this;
 		}
 
-		constexpr operator uintptr_t() const
+		constexpr operator uint64_t() const
 		{
-			return reinterpret_cast<uintptr_t>(this->get());
+			return reinterpret_cast<uint64_t>(this->get());
 		}
 
-		uintptr_t get_address() const { return address; }
-		uintptr_t get_base() const { return base; }
+		uint64_t get_address() const { return address; }
+		uint64_t get_base() const { return base; }
 	private:
-		uintptr_t address;
-		uintptr_t base;
+		uint64_t address;
+		uint64_t base;
 	};
 
 	namespace memory

@@ -111,6 +111,7 @@ namespace liborbisutil
 			hook->create(target, replace, false);
 			if (hook->is_created())
 			{
+				LOG_SUCCESS("Created hook '%s'\n", name.c_str());
 				if (enable)
 				{
 					hook->enable();
@@ -142,6 +143,8 @@ namespace liborbisutil
 
 		bool manager::enable(const std::string& name)
 		{
+			std::lock_guard<std::mutex> lock(mtx);
+
 			auto hook = get(name);
 			if (hook)
 			{
@@ -154,6 +157,8 @@ namespace liborbisutil
 
 		bool manager::disable(const std::string& name)
 		{
+			std::lock_guard<std::mutex> lock(mtx);
+
 			auto hook = get(name);
 			if (hook)
 			{
@@ -166,6 +171,8 @@ namespace liborbisutil
 
 		bool manager::remove(const std::string& name)
 		{
+			std::lock_guard<std::mutex> lock(mtx);
+
 			auto hook = hooks.find(name);
 			if (hook != hooks.end())
 			{
@@ -178,6 +185,8 @@ namespace liborbisutil
 
 		void manager::clear()
 		{
+			std::lock_guard<std::mutex> lock(mtx);
+
 			for (auto& hook : hooks)
 			{
 				hook.second->clear();
@@ -192,7 +201,8 @@ namespace liborbisutil
 			{
 				return hook->second.get();
 			}
-			return nullptr;
+
+			throw not_found_hook_exception(name);
 		}
 	}
 }

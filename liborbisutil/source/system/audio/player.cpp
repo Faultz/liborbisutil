@@ -423,68 +423,55 @@ namespace liborbisutil
 		}
 
 		constexpr static size_t BUFFER_FRAMES = 256;
-		// Player implementation
-		void player::audio_thread_main() {
+		void player::audio_thread_main() 
+		{
 			const size_t stereo_size = BUFFER_FRAMES * 2;
 			const size_t mono_size = BUFFER_FRAMES;
 
-			std::vector<float> stereo_mix(stereo_size, 0.0f);
-			std::vector<int16_t> stereo_output(stereo_size);
-			std::vector<int16_t> mono_output(mono_size);
+			float stereo_mix[stereo_size];
+			int16_t stereo_output[stereo_size];
+			int16_t mono_output[mono_size];
 
-			while (running) {
-				// Clear buffers
-				std::fill(stereo_mix.begin(), stereo_mix.end(), 0.0f);
+			while (running)
+			{
+				// Clear mix buffer
+				std::memset(stereo_mix, 0, sizeof(float) * stereo_size);
 
 				bool playing = false;
-				// Mix tracks into stereo buffer
 				{
 					std::lock_guard<std::mutex> lock(mutex);
-					for (auto& track : tracks) {
+					for (auto& track : tracks) 
+					{
 
 						if (track->is_playing())
 						{
 							playing = true;
 
-							track->read_samples(stereo_mix.data(), BUFFER_FRAMES);
+							track->read_samples(stereo_mix, BUFFER_FRAMES);
 						}
 					}
 
 					/// If no tracks are playing, idle
-					if (!playing) {
+					if (!playing) 
+					{
 						sceKernelUsleep(1000);
 						continue;
 					}
 				}
 
-				//float muiltichannel_buffer[BUFFER_FRAMES * 8 * sizeof(float)];
-				// Duplicate the mono channel to all 8 channels
-				//for (int i = 0; i < stereo_size; ++i) {
-				// 
-				//	// Extract left and right samples for the current frame
-				//	float left_sample = stereo_mix[i * 2];
-				//	float right_sample = stereo_mix[i * 2 + 1];
-
-				//	// Downmix to mono by averaging the left and right channels
-				//	float mono_sample = (left_sample + right_sample) / 2.0f;
-
-				//	// Duplicate the mono sample to all 8 channels for the current frame
-				//	for (int j = 0; j < 8; ++j) {
-				//		muiltichannel_buffer[i * 8 + j] = mono_sample;
-				//	}
-				//}
-
-				for (size_t i = 0; i < stereo_size; i++) {
+				for (size_t i = 0; i < stereo_size; i++)
+				{
 					float sample = std::clamp(stereo_mix[i], -1.0f, 1.0f);
 					stereo_output[i] = static_cast<int16_t>(sample * 32767.0f);
 				}
 
 				// Submit to main output
-				sceAudioOutOutput(main_handle, stereo_output.data());
+				sceAudioOutOutput(main_handle, stereo_output);
 
 				// Handle pad output if connected
 				// Downmix to mono
-				for (size_t i = 0; i < BUFFER_FRAMES; i++) {
+				for (size_t i = 0; i < BUFFER_FRAMES; i++)
+				{
 					float left = stereo_mix[i * 2];
 					float right = stereo_mix[i * 2 + 1];
 					float mono = (left + right) * 0.7071f; // -3dB to prevent clipping
@@ -495,7 +482,7 @@ namespace liborbisutil
 				// Submit to pad
 				if (pad_handle >= 0)
 				{
-					sceAudioOutOutput(pad_handle, mono_output.data());
+					sceAudioOutOutput(pad_handle, mono_output);
 				}
 			}
 		}

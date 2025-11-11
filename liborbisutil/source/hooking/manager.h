@@ -11,6 +11,22 @@ namespace liborbisutil
 {
 	namespace hook
 	{
+		class not_found_hook_exception : public std::exception
+		{
+		public:
+			not_found_hook_exception(const std::string& name)
+				: message("Hook with name '" + name + "' not found.")
+			{
+			}
+			virtual const char* what() const noexcept override
+			{
+				return message.c_str();
+			}
+
+		private:
+			std::string message;
+		};
+
 		class detour
 		{
 		public:
@@ -134,6 +150,7 @@ namespace liborbisutil
 			}
 		private:
 			std::unordered_map<std::string, std::unique_ptr<detour>> hooks;
+			std::mutex mtx;
 		};
 
 		template <typename T>

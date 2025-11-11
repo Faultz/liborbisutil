@@ -73,6 +73,13 @@ namespace liborbisutil
 		this->fd = INVALID_SOCKET;
 	}
 
+	socket::socket(int fd, socket_type type)
+	{
+		this->fd = fd;
+		this->type = type;
+		this->connected = (fd != INVALID_SOCKET);
+	}
+
 	socket::socket(uint32_t ip, uint16_t port, socket_type type)
 		: ip(ip), port(port), type(type)
 	{
@@ -86,6 +93,8 @@ namespace liborbisutil
 		this->connected = false;
 		this->fd = INVALID_SOCKET;
 	}
+
+
 
 	bool socket::connect()
 	{

@@ -33,7 +33,7 @@ namespace liborbisutil
 		std::string erase(const std::string& str, const std::string& sub);
 
 		const char** vector_to_pointer_array(const std::vector<std::string>& strings);
-		std::vector<std::string> pointer_array_to_vector(const char* const* strings);
+		std::vector<std::string> pointer_array_to_vector(const char* const* strings, std::size_t count);
 
 		bool is_numeric(const std::string& str);
 		bool is_integer(const std::string& str);
@@ -79,7 +79,6 @@ namespace liborbisutil
 		{
 			return format(fmt, args...);
 		}
-
 
 		template <typename ...Args>
 		std::wstring format(std::wstring fmt, Args... args)
