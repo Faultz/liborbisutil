@@ -616,7 +616,7 @@ namespace liborbisutil
 			auto res = sceKernelRead(fd, buffer, size);
 			if (res < 0)
 			{
-				printf("sceKernelRead(%d) failed: 0x%08X\n", fd, res);
+				printf("sceKernelRead(%d) failed: 0x%08lX\n", fd, res);
 			}
 
 			return res;
@@ -626,7 +626,7 @@ namespace liborbisutil
 			auto res = sceKernelWrite(fd, buffer, size);
 			if (res < 0)
 			{
-				printf("sceKernelWrite(%d) failed: 0x%08X\n", fd, res);
+				printf("sceKernelWrite(%d) failed: 0x%08lX\n", fd, res);
 			}
 			return res;
 		}
@@ -635,7 +635,7 @@ namespace liborbisutil
 			auto res = sceKernelLseek(fd, offset, whence);
 			if (res < 0)
 			{
-				printf("sceKernelLseek(%d) failed: 0x%08X\n", fd, res);
+				printf("sceKernelLseek(%d) failed: 0x%08lX\n", fd, res);
 			}
 			return res;
 		}
@@ -644,7 +644,7 @@ namespace liborbisutil
 			auto res = sceKernelLseek(fd, 0, SEEK_CUR);
 			if (res < 0)
 			{
-				printf("sceKernelLseek(%d) failed: 0x%08X\n", fd, res);
+				printf("sceKernelLseek(%d) failed: 0x%08lX\n", fd, res);
 			}
 			return res;
 		}
