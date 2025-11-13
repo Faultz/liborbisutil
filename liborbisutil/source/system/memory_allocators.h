@@ -95,6 +95,7 @@ namespace liborbisutil
 			std::mutex mtx;
 			std::set<Chunk*, chunk_compare> free_chunks;
 			std::unordered_map<void*, Chunk*> chunks;
+			sce::Gnm::OwnerHandle owner_handle;
 		};
 
 		class mapped_allocator : public heap_allocator
