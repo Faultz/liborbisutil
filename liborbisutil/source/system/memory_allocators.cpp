@@ -397,6 +397,9 @@ namespace liborbisutil
 
 			LOG_DEBUG("[direct_memory_allocator]: Released memory at 0x%08lX\n", start);
 
+			if (sce::Gnm::isUserPaEnabled())
+				sce::Gnm::unregisterOwnerAndResources(owner_handle);
+
 			initialised = false;
 		}
 
@@ -427,7 +430,9 @@ namespace liborbisutil
 			sce::Gnm::registerOwner(&owner_handle, name.data());
 
 			set(mapStart, size, name);
-
+			if (sce::Gnm::isUserPaEnabled())
+				sce::Gnm::registerOwner(&owner_handle, name.data());
+			LOG_DEBUG("[direct_memory_allocator]: Mapped memory at 0x%08lX\n", reinterpret_cast<uintptr_t>(mapStart));
 			this->initialised = true;
 		}
 
