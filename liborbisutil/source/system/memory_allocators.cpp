@@ -424,6 +424,8 @@ namespace liborbisutil
 
 			memset(mapStart, 0, size);
 
+			sce::Gnm::registerOwner(&owner_handle, name.data());
+
 			set(mapStart, size, name);
 
 			this->initialised = true;

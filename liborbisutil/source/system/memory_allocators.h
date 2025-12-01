@@ -141,6 +141,7 @@ namespace liborbisutil
 			off_t start;
 			bool initialised;
 			SceKernelMemoryType type;
+			sce::Gnm::OwnerHandle owner_handle;
 		};
 	}
 }
