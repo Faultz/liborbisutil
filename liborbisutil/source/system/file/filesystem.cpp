@@ -1,10 +1,7 @@
+#include "../../stdafx.h"
 #include "filesystem.h"
-#include "string.h"
-
-#include <kernel.h>
-#include <sstream>
-
-#include "logger.h"
+#include "../string/string.h"
+#include "../logger/logger.h"
 
 namespace liborbisutil
 {

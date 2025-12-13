@@ -1,6 +1,5 @@
+#include "../../stdafx.h"
 #include "wav.h"
-
-#include <kernel.h>
 
 const uint32_t RIFF_CC = 'RIFF';
 const uint32_t FMT_CC = 'fmt ';

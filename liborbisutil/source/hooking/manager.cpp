@@ -1,6 +1,7 @@
+#include "../stdafx.h"
 #include "manager.h"
-#include "../system/logger.h"
-#include "../system/resolve.h"
+#include "../system/logger/logger.h"
+#include "../system/resolve/resolve.h"
 
 namespace liborbisutil
 {

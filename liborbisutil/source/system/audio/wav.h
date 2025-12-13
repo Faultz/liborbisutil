@@ -1,6 +1,9 @@
 #pragma once
 
-#include "../filesystem.h"
+// WAV file utilities - standard includes provided by stdafx.h
+// Depends on: filesystem
+
+#include "../file/filesystem.h"
 
 struct riff_header
 {

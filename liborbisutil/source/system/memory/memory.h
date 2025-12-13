@@ -1,9 +1,6 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-
-#include <KernelExt.h>
+// Memory utilities - standard includes provided by stdafx.h
 
 inline static uintptr_t process_base_address = []() -> uintptr_t {
 	static uintptr_t base;

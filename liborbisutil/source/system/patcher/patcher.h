@@ -1,7 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <unordered_map>
+// Patcher utilities - standard includes provided by stdafx.h
 
 namespace liborbisutil
 {

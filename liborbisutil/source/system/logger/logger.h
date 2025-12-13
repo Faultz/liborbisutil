@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vector>
-#include <string>
+// Logger - standard includes provided by stdafx.h
+// Depends on: string utilities
 
-#include "string.h"
+#include "../string/string.h"
 
 namespace liborbisutil
 {

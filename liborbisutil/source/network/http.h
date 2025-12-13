@@ -1,11 +1,10 @@
 #pragma once
 
-#include <string>
-#include <unordered_map>
+// HTTP client - standard includes provided by stdafx.h
+// Depends on: logger, resolve
 
-#include <libhttp.h>
-#include "../system/logger.h"
-#include "../system/resolve.h"
+#include "../system/logger/logger.h"
+#include "../system/resolve/resolve.h"
 
 #define LIBORBISUTIL_HTTP_CTX_DEFAULT -1
 

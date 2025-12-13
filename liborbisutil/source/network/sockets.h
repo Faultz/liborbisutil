@@ -1,9 +1,6 @@
 #pragma once
 
-#include <net.h>
-#include <string>
-
-#include <rtcExt.h>
+// Sockets - standard includes provided by stdafx.h
 
 #define INVALID_SOCKET -1
 #define SOCKET_TIME_OUT 7000

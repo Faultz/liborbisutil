@@ -1,5 +1,5 @@
+#include "../../stdafx.h"
 #include "memory.h"
-#include <kernel.h>
 
 namespace liborbisutil
 {

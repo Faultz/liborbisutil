@@ -1,8 +1,6 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <vector>
+// Filesystem utilities - standard includes provided by stdafx.h
 
 namespace liborbisutil
 {

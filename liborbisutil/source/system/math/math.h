@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stdio.h>
-#include <iostream>
+// Math utilities - standard includes provided by stdafx.h
 
 namespace liborbisutil
 {

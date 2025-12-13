@@ -1,16 +1,9 @@
 #pragma once
 
-#include <mutex>
-#include <set>
-#include <vector>
-#include <unordered_map>
-#include <algorithm>
+// Memory allocators - standard includes provided by stdafx.h
+// Depends on: memory
 
-#include <gnmx.h>
-#include <kernel.h>
-#include <KernelExt.h>
-
-#include "memory.h"
+#include "../memory.h"
 
 namespace liborbisutil
 {

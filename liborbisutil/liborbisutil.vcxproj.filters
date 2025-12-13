@@ -24,6 +24,7 @@
     <ClCompile Include="source\system\pad\pad.cpp" />
     <ClCompile Include="source\system\audio\player.cpp" />
     <ClCompile Include="source\system\audio\wav.cpp" />
+    <ClCompile Include="source\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\network\http.h" />
@@ -41,5 +42,6 @@
     <ClInclude Include="source\system\pad\pad.h" />
     <ClInclude Include="source\system\audio\player.h" />
     <ClInclude Include="source\system\audio\wav.h" />
+    <ClInclude Include="source\stdafx.h" />
   </ItemGroup>
 </Project>

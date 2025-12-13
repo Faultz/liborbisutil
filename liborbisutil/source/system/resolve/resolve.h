@@ -1,10 +1,6 @@
 #pragma once
 
-#include <memory>
-#include <string>
-#include <kernel.h>
-#include <KernelExt.h>
-#include <libsysmodule.h>
+// Resolve utilities - standard includes provided by stdafx.h
 
 constexpr size_t operator"" _KB(unsigned long long size)
 {

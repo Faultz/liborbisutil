@@ -1,3 +1,4 @@
+#include "../../stdafx.h"
 #include "resolve.h"
 
 #include "UserServiceExt.h"

@@ -1,6 +1,7 @@
+#include "../../stdafx.h"
 #include "player.h"
-#include "../logger.h"
-#include "../resolve.h"
+#include "../logger/logger.h"
+#include "../resolve/resolve.h"
 #include <audioout.h>
 
 namespace liborbisutil

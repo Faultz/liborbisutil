@@ -1,14 +1,6 @@
 #pragma once
 
-#include <functional>
-#include <mutex>
-#include <queue>
-#include <condition_variable>
-#include <stdio.h>
-#include <future>
-
-#include <kernel.h>
-#include <KernelExt.h>
+// Thread utilities - standard includes provided by stdafx.h
 
 using posix_thread = thread;
 

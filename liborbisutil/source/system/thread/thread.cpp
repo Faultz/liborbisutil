@@ -1,6 +1,7 @@
+#include "../../stdafx.h"
 #include "thread.h"
-#include "logger.h"
-#include "resolve.h"
+#include "../logger/logger.h"
+#include "../resolve/resolve.h"
 
 namespace liborbisutil
 {

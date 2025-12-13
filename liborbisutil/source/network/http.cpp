@@ -1,6 +1,7 @@
+#include "../stdafx.h"
 #include "http.h"
 
-#include "../system/filesystem.h"
+#include "../system/file/filesystem.h"
 
 #define DEBUG_HTTP
 

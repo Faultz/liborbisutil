@@ -1,11 +1,6 @@
 #pragma once
 
-#include <stdio.h>
-#include <string>
-#include <algorithm>
-#include <vector>
-#include <sstream>
-#include <memory>
+// String utilities - standard includes provided by stdafx.h
 
 namespace liborbisutil
 {

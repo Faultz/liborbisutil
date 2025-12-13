@@ -1,13 +1,7 @@
 #pragma once
 
-#include <iostream>
-#include <algorithm>
-#include <string>
-#include <vector>
-#include <thread>
-#include <mutex>
-
-#include <atomic>
+// Audio player - standard includes provided by stdafx.h
+// Depends on: wav
 
 #include "wav.h"
 

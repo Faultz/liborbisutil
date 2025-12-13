@@ -1,6 +1,7 @@
+#include "../../../stdafx.h"
 #include "memory_allocators.h"
 
-#include "logger.h"
+#include "../../logger/logger.h"
 
 namespace liborbisutil
 {

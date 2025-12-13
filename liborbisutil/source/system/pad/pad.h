@@ -1,9 +1,10 @@
 #pragma once
 
-#include <pad.h>
+// Pad/Controller utilities - standard includes provided by stdafx.h
+// Depends on: hooking, math
 
-#include "../hooking/manager.h"
-#include "../math.h"
+#include "../../hooking/manager.h"
+#include "../math/math.h"
 
 namespace liborbisutil
 {

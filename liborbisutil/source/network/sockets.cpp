@@ -1,6 +1,7 @@
+#include "../stdafx.h"
 #include "sockets.h"
-#include "../system/resolve.h"
-#include "../system/logger.h"
+#include "../system/resolve/resolve.h"
+#include "../system/logger/logger.h"
 
 namespace liborbisutil
 {

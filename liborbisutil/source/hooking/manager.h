@@ -1,11 +1,9 @@
 #pragma once
 
-#include <cstdint>
-#include <unordered_map>
+// Hooking/Detour manager - standard includes provided by stdafx.h
+// Depends on: memory
 
-#include "../system/memory.h"
-
-#include "minhook.h"
+#include "../system/memory/memory.h"
 
 namespace liborbisutil
 {

@@ -1,7 +1,8 @@
+#include "../../stdafx.h"
 #include "patcher.h"
-#include "../system/logger.h"
-#include "../system/resolve.h"
-#include "../system/memory.h"
+#include "../logger/logger.h"
+#include "../resolve/resolve.h"
+#include "../memory/memory.h"
 
 namespace liborbisutil
 {
