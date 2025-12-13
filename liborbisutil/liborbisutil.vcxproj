@@ -83,6 +83,7 @@
     <ClCompile Include="source\system\logger\logger.cpp" />
     <ClCompile Include="source\system\memory\memory.cpp" />
     <ClCompile Include="source\system\memory\allocation\memory_allocators.cpp" />
+    <ClCompile Include="source\system\memory\pattern.cpp" />
     <ClCompile Include="source\system\pad\pad.cpp" />
     <ClCompile Include="source\system\patcher\patcher.cpp" />
     <ClCompile Include="source\system\resolve\resolve.cpp" />
@@ -101,6 +102,7 @@
     <ClInclude Include="source\system\logger\logger.h" />
     <ClInclude Include="source\system\memory\memory.h" />
     <ClInclude Include="source\system\memory\allocation\memory_allocators.h" />
+    <ClInclude Include="source\system\memory\pattern.h" />
     <ClInclude Include="source\system\pad\pad.h" />
     <ClInclude Include="source\system\patcher\patcher.h" />
     <ClInclude Include="source\system\resolve\resolve.h" />

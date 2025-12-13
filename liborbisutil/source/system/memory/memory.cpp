@@ -1,10 +1,26 @@
 #include "../../stdafx.h"
+#include "../logger/logger.h"
 #include "memory.h"
 
 namespace liborbisutil
 {
 	namespace memory
 	{
+		uintptr_t read_offset(uintptr_t address)
+		{
+			if (address == 0) {
+				LOG_ERROR("Attempted to read a null offset!");
+				return 0;
+			}
+
+			if constexpr (sizeof(uintptr_t) == sizeof(uint64_t)) {
+				return address + *reinterpret_cast<int32_t*>(address) + 4;
+			}
+			else {
+				return *reinterpret_cast<uintptr_t*>(address);
+			}
+		}
+
 		void* allocate(size_t size)
 		{
 			return malloc(size);

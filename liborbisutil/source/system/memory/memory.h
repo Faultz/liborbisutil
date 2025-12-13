@@ -86,6 +86,8 @@ namespace liborbisutil
 			int prot;
 		};
 
+		uintptr_t read_offset(uintptr_t address);
+
 		void* allocate(size_t size);
 		void free(void* ptr);
 
