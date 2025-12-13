@@ -17,6 +17,7 @@ namespace liborbisutil
             {
                 mod_id = sceKernelLoadStartModule(name.data(), 0, nullptr, 0, nullptr, nullptr);
             }
+
             uintptr_t base = 0;
             size_t size = 0;
             SceKernelModuleInfo processModuleInfo;

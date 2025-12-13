@@ -164,7 +164,7 @@ namespace liborbisutil
                 if (addr == 0) {
                     // Make sure to log something on error, even if calling code doesn't catch it
                     LOG_ERROR("sigscan for pattern '%s' failed to find a match\n", name.data());
-                    throw std::runtime_error("sigscan failed");
+                    throw std::exception("sigscan failed");
                 }
                 return addr == 0 ? 0 : addr + offset;
             }
