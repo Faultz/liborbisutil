@@ -15,6 +15,7 @@
 #include "../source/system/file/filesystem.h"
 #include "../source/system/thread/thread.h"
 #include "../source/system/memory/memory.h"
+#include "../source/system/memory/pattern.h"
 #include "../source/system/memory/allocation/memory_allocators.h"
 #include "../source/system/patcher/patcher.h"
 #include "../source/system/math/math.h"
