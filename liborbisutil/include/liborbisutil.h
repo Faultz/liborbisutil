@@ -63,22 +63,21 @@
 #pragma comment(lib, "fmtlib.a")
 #pragma comment(lib, "libMinhook.a")
 
-#include "../source/system/logger.h"
-#include "../source/system/resolve.h"
-#include "../source/system/filesystem.h"
-#include "../source/system/string.h"
-#include "../source/system/thread.h"
-#include "../source/system/memory.h"
-#include "../source/system/memory_allocators.h"
-#include "../source/system/patcher.h"
-#include "../source/system/pad.h"
+#include "../source/system/logger/logger.h"
+#include "../source/system/resolve/resolve.h"
+#include "../source/system/file/filesystem.h"
+#include "../source/system/string/string.h"
+#include "../source/system/thread/thread.h"
+#include "../source/system/memory/memory.h"
+#include "../source/system/memory/allocation/memory_allocators.h"
+#include "../source/system/patcher/patcher.h"
+#include "../source/system/pad/pad.h"
+#include "../source/system/math/math.h"
 
 #include "../source/hooking/manager.h"
 
 #include "../source/network/http.h"
 #include "../source/network/sockets.h"
-
-#include "../source/math.h"
 
 #include "../source/system/audio/wav.h"
 #include "../source/system/audio/player.h"
