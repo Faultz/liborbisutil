@@ -1,29 +1,32 @@
 #include "../../stdafx.h"
 #include "pattern.h"
+#include "../resolve/resolve.h"
 
 namespace liborbisutil
 {
-	namespace memory
-	{
-        std::pair<uintptr_t, size_t> get_proc_range(void) {
+    namespace memory
+    {
+        std::pair<uintptr_t, size_t> get_proc_or_mod_range(std::string_view name) {
             static std::optional<std::pair<uintptr_t, size_t>> range = std::nullopt;
             if (range) {
                 return *range;
             }
 
+            int mod_id = 0;
+            if (!name.empty())
+            {
+                mod_id = sceKernelLoadStartModule(name.data(), 0, nullptr, 0, nullptr, nullptr);
+            }
+            uintptr_t base = 0;
+            size_t size = 0;
             SceKernelModuleInfo processModuleInfo;
             processModuleInfo.size = sizeof(SceKernelModuleInfo);
-            if (sceKernelGetModuleInfo(0, &processModuleInfo) < 0)
-            {
-                return *range;
+            if (sceKernelGetModuleInfo(mod_id, &processModuleInfo) < 0) {
+                return {};
             }
 
-            uintptr_t base = reinterpret_cast<uintptr_t>(processModuleInfo.segmentInfo[0].address);
-            size_t size = 0;
-            for (int i = 0; i < processModuleInfo.segmentCount; i++)
-            {
-                size += processModuleInfo.segmentInfo[i].size;
-            }
+            base = (uintptr_t)processModuleInfo.segmentInfo[0].address;
+            size = processModuleInfo.segmentInfo[0].size;
 
             range = std::make_pair(base, size);
             return *range;
@@ -54,10 +57,10 @@ namespace liborbisutil
             return 0;
         }
 
-        uintptr_t sigscan(const uint8_t* bytes, const uint8_t* mask, size_t pattern_size)
+        uintptr_t sigscan(const uint8_t* bytes, const uint8_t* mask, size_t pattern_size, std::string_view name)
         {
-            auto [start, size] = get_proc_range();
+            auto [start, size] = get_proc_or_mod_range(name);
             return sigscan(bytes, mask, pattern_size, start, size);
         }
-	}
+    }
 }

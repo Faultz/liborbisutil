@@ -1,5 +1,8 @@
 #pragma once
 
+#include "../logger/logger.h"
+#include <array>
+
 // Pattern utilities - standard includes provided by stdafx.h
 
 namespace liborbisutil
@@ -17,10 +20,10 @@ namespace liborbisutil
             size_t pattern_size,
             uintptr_t start,
             size_t size);
-        uintptr_t sigscan(const uint8_t* bytes, const uint8_t* mask, size_t pattern_size);
+        uintptr_t sigscan(const uint8_t* bytes, const uint8_t* mask, size_t pattern_size, std::string_view name = "");
 
         template <typename T>
-        T sigscan(const uint8_t* bytes, const uint8_t* mask, size_t pattern_size) {
+        T sigscan(const uint8_t* bytes, const uint8_t* mask, size_t pattern_size, std::string_view name = "") {
             return reinterpret_cast<T>(sigscan(bytes, mask, pattern_size));
         }
         template <typename T>
@@ -39,6 +42,7 @@ namespace liborbisutil
             std::array<uint8_t, n> bytes;
             /// A mask over the bytes to match. May be bit-level.
             std::array<uint8_t, n> mask;
+            std::string_view module_name;
             /// A constant offset to add to the found address.
             ptrdiff_t offset = 0;
 
@@ -96,9 +100,10 @@ namespace liborbisutil
              * @return A sigscan pattern.
              */
             template <size_t m>
-            consteval pattern(const char(&hex)[m],
+            inline constexpr pattern(const char(&hex)[m],
+                std::string_view module_name = "",
                 ptrdiff_t offset = std::numeric_limits<ptrdiff_t>::max())
-                : bytes(), mask(), offset(offset) {
+                : bytes(), mask(), module_name(module_name), offset(offset) {
                 ptrdiff_t idx = 0;
                 bool upper_nibble = true;
 
@@ -154,8 +159,8 @@ namespace liborbisutil
              * @param name The name of this pattern, to use in error messages.
              * @return The found location, or 0.
              */
-            [[nodiscard]] uintptr_t sigscan(std::string_view name) const {
-                auto addr = memory::sigscan(this->bytes.data(), this->mask.data(), n);
+            [[nodiscard]] uintptr_t sigscan(std::string_view name, std::string_view module_name = "") const {
+                auto addr = memory::sigscan(this->bytes.data(), this->mask.data(), n, module_name);
                 if (addr == 0) {
                     // Make sure to log something on error, even if calling code doesn't catch it
                     LOG_ERROR("sigscan for pattern '%s' failed to find a match\n", name.data());
@@ -164,8 +169,8 @@ namespace liborbisutil
                 return addr == 0 ? 0 : addr + offset;
             }
             template <typename T>
-            [[nodiscard]] T sigscan(std::string_view name) const {
-                return reinterpret_cast<T>(this->sigscan(name));
+            [[nodiscard]] T sigscan(std::string_view name, std::string_view module_name = "") const {
+                return reinterpret_cast<T>(this->sigscan(name, module_name));
             }
             [[nodiscard]] uintptr_t sigscan_nullable(void) const {
                 auto addr = sigscan(this->bytes.data(), this->mask.data(), n);
