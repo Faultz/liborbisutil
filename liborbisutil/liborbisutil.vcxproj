@@ -70,37 +70,37 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\hooking\manager.cpp" />
-    <ClCompile Include="source\math.cpp" />
+    <ClCompile Include="source\system\math\math.cpp" />
     <ClCompile Include="source\network\http.cpp" />
     <ClCompile Include="source\network\sockets.cpp" />
     <ClCompile Include="source\system\audio\player.cpp" />
     <ClCompile Include="source\system\audio\wav.cpp" />
-    <ClCompile Include="source\system\filesystem.cpp" />
-    <ClCompile Include="source\system\logger.cpp" />
-    <ClCompile Include="source\system\memory.cpp" />
-    <ClCompile Include="source\system\memory_allocators.cpp" />
-    <ClCompile Include="source\system\pad.cpp" />
-    <ClCompile Include="source\system\patcher.cpp" />
-    <ClCompile Include="source\system\resolve.cpp" />
-    <ClCompile Include="source\system\string.cpp" />
-    <ClCompile Include="source\system\thread.cpp" />
+    <ClCompile Include="source\system\file\filesystem.cpp" />
+    <ClCompile Include="source\system\logger\logger.cpp" />
+    <ClCompile Include="source\system\memory\memory.cpp" />
+    <ClCompile Include="source\system\memory\allocation\memory_allocators.cpp" />
+    <ClCompile Include="source\system\pad\pad.cpp" />
+    <ClCompile Include="source\system\patcher\patcher.cpp" />
+    <ClCompile Include="source\system\resolve\resolve.cpp" />
+    <ClCompile Include="source\system\string\string.cpp" />
+    <ClCompile Include="source\system\thread\thread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\hooking\manager.h" />
-    <ClInclude Include="source\math.h" />
+    <ClInclude Include="source\system\math\math.h" />
     <ClInclude Include="source\network\http.h" />
     <ClInclude Include="source\network\sockets.h" />
     <ClInclude Include="source\system\audio\player.h" />
     <ClInclude Include="source\system\audio\wav.h" />
-    <ClInclude Include="source\system\filesystem.h" />
-    <ClInclude Include="source\system\logger.h" />
-    <ClInclude Include="source\system\memory.h" />
-    <ClInclude Include="source\system\memory_allocators.h" />
-    <ClInclude Include="source\system\pad.h" />
-    <ClInclude Include="source\system\patcher.h" />
-    <ClInclude Include="source\system\resolve.h" />
-    <ClInclude Include="source\system\string.h" />
-    <ClInclude Include="source\system\thread.h" />
+    <ClInclude Include="source\system\file\filesystem.h" />
+    <ClInclude Include="source\system\logger\logger.h" />
+    <ClInclude Include="source\system\memory\memory.h" />
+    <ClInclude Include="source\system\memory\allocation\memory_allocators.h" />
+    <ClInclude Include="source\system\pad\pad.h" />
+    <ClInclude Include="source\system\patcher\patcher.h" />
+    <ClInclude Include="source\system\resolve\resolve.h" />
+    <ClInclude Include="source\system\string\string.h" />
+    <ClInclude Include="source\system\thread\thread.h" />
   </ItemGroup>
   <Import Condition="'$(ConfigurationType)' == 'Makefile' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets')" Project="$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
