@@ -41,17 +41,22 @@ namespace liborbisutil
 
 		size_t get_module_size(const std::string& module)
 		{
+			int libraryId = -1;
+
 			size_t size = 0;
-			auto library = sceKernelLoadStartModule(module.c_str(), 0, nullptr, 0, nullptr, nullptr);
-			if (library < 0)
+			if (module != "")
 			{
-				printf("sceKernelLoadStartModule(%s) failed: 0x%08X\n", module.c_str(), library);
-				return 0;
+				libraryId = sceKernelLoadStartModule(module.c_str(), 0, nullptr, 0, nullptr, nullptr);
+				if (libraryId < 0)
+				{
+					printf("sceKernelLoadStartModule(%s) failed: 0x%08X\n", module.c_str(), libraryId);
+					return 0;
+				}
 			}
 
 			SceKernelModuleInfo moduleInfo;
 			moduleInfo.size = sizeof(SceKernelModuleInfo);
-			if (sceKernelGetModuleInfo(library, &moduleInfo) < 0)
+			if (sceKernelGetModuleInfo(libraryId, &moduleInfo) < 0)
 			{
 				printf("sceKernelGetModuleInfo(%s) failed\n", module.c_str());
 				return 0;
