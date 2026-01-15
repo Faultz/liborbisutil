@@ -7,9 +7,17 @@ namespace liborbisutil
     namespace memory
     {
         std::pair<uintptr_t, size_t> get_proc_or_mod_range(std::string_view name) {
-            static std::optional<std::pair<uintptr_t, size_t>> range = std::nullopt;
-            if (range) {
-                return *range;
+			static std::unordered_map<std::string_view, std::pair<uintptr_t, size_t>> module_ranges;
+
+			auto range_it = module_ranges.find(name);
+			if (range_it != module_ranges.end()) 
+            {
+				return range_it->second;
+			}
+
+            if (name == "")
+            {
+				return { resolve::get_process_base(), resolve::get_module_size("") };
             }
 
             int mod_id = 0;
@@ -29,8 +37,14 @@ namespace liborbisutil
             base = (uintptr_t)processModuleInfo.segmentInfo[0].address;
             size = processModuleInfo.segmentInfo[0].size;
 
-            range = std::make_pair(base, size);
-            return *range;
+			auto pair = std::make_pair(base, size);
+			auto range = module_ranges.find(name);
+			if (range == module_ranges.end())
+            {
+				module_ranges[name] = pair;
+			}
+
+            return pair;
         }
 
         uintptr_t sigscan(const uint8_t* bytes,

@@ -13,7 +13,7 @@ namespace liborbisutil
         template<size_t n>
         struct pattern;
 
-        std::pair<uintptr_t, size_t> get_proc_range(void);
+        std::pair<uintptr_t, size_t> get_proc_or_mod_range(std::string_view name);
 
         uintptr_t sigscan(const uint8_t* bytes,
             const uint8_t* mask,
