@@ -186,7 +186,7 @@ void run_thread_tests()
         return nullptr;
         }, true);
 
-    liborbisutil::thread thr([]() {
+    liborbisutil::thread thr([](void*) {
 
         LOG_INFO("new thread is running\n");
         }, "test");
@@ -242,7 +242,7 @@ void run_http_tests()
 
 void run_sockets_test()
 {
-	liborbisutil::socket sock("httpbin.org", 80);
+	liborbisutil::socket sock("httpbin.org", 80, liborbisutil::socket_type::udp);
 
     if (sock.connect())
     {
@@ -291,7 +291,7 @@ extern "C"
         test.run();
         std::cout << "All tests passed!\n";
 
-		liborbisutil::thread thr([]() {
+		liborbisutil::thread thr([](void*) {
 
             //run_log_tests();
             //run_thread_tests();
