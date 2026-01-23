@@ -118,7 +118,7 @@ namespace liborbisutil
 		public:
 			direct_memory_allocator() = default;
 			direct_memory_allocator(size_t size, SceKernelMemoryType type, std::string name = "", size_t end = SCE_KERNEL_MAIN_DMEM_SIZE, int protection = SCE_KERNEL_PROT_CPU_RW | SCE_KERNEL_PROT_GPU_RW);
-			direct_memory_allocator(const direct_memory_allocator&) = delete;
+			direct_memory_allocator(void* ptr, size_t size, SceKernelMemoryType type, std::string name = "", int protection = SCE_KERNEL_PROT_CPU_RW | SCE_KERNEL_PROT_GPU_RW);
 			virtual ~direct_memory_allocator();
 
 			void initialize(size_t size, SceKernelMemoryType type, std::string name = "", size_t end = SCE_KERNEL_MAIN_DMEM_SIZE, int protection = SCE_KERNEL_PROT_CPU_RW | SCE_KERNEL_PROT_GPU_RW);
@@ -134,6 +134,7 @@ namespace liborbisutil
 
 			off_t start;
 			bool initialised;
+			bool reserved;
 			SceKernelMemoryType type;
 			sce::Gnm::OwnerHandle owner_handle;
 		};

@@ -376,6 +376,41 @@ namespace liborbisutil
 			initialize(size, type, name, end, protection);
 		}
 
+		direct_memory_allocator::direct_memory_allocator(void* ptr, size_t size, SceKernelMemoryType type, std::string name, int protection)
+		{
+			this->current_size = size;
+			this->cached_size = size;
+			this->type = type;
+			this->initialised = true;
+			this->reserved = true;
+
+			auto res = sceKernelAllocateDirectMemory((off_t)ptr, (off_t)ptr + size, size, 0, type, &start);
+			if (res < 0)
+			{
+				LOG_ERROR("[direct_memory_allocator]: Failed to allocate memory: 0x%X\n", res);
+				return;
+			}
+
+			void* mapStart = nullptr;
+			res = sceKernelMapNamedDirectMemory(&mapStart, size, 3, 0, start, 0, name.data());
+			if (res < 0)
+			{
+				LOG_ERROR("[direct_memory_allocator]: Failed to map memory: 0x%X\n", res);
+				return;
+			}
+
+			res = sceKernelMprotect(mapStart, size, SCE_KERNEL_PROT_CPU_RW | SCE_KERNEL_PROT_GPU_RW);
+			if (res < 0)
+			{
+				LOG_ERROR("[direct_memory_allocator]: Failed to set memory protection: 0x%X\n", res);
+				return;
+			}
+
+			LOG_DEBUG("[direct_memory_allocator]: Mapped memory at 0x%08lX\n", reinterpret_cast<uintptr_t>(mapStart));
+			memset(mapStart, 0, size);
+			set(mapStart, size, name);
+		}
+
 		direct_memory_allocator::~direct_memory_allocator()
 		{
 			clear();
