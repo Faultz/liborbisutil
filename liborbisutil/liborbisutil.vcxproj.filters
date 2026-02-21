@@ -151,5 +151,8 @@
     <ClInclude Include="source\system\math\math.h">
       <Filter>src\system\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\liborbisutil.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

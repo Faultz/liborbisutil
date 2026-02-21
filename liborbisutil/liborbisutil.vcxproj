@@ -91,6 +91,7 @@
     <ClCompile Include="source\system\thread\thread.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\liborbisutil.h" />
     <ClInclude Include="source\hooking\manager.h" />
     <ClInclude Include="source\stdafx.h" />
     <ClInclude Include="source\system\math\math.h" />

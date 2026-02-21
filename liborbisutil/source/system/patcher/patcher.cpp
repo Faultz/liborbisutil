@@ -20,7 +20,7 @@ namespace liborbisutil
 
 		void info::enable()
 		{
-			if (!this->set)
+			if (this->set)
 				return;
 
 			memory::write(address, patched.data(), patched.size());
