@@ -7,43 +7,149 @@
     <Filter Include="src\system">
       <UniqueIdentifier>{8ff70ef1-455d-4128-9c38-e68582f5a49c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{400f057a-3aa7-4103-a0de-fe789873d9e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\network">
+      <UniqueIdentifier>{8b0a86b9-8335-4040-8cad-d65a6f765d94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hooking">
+      <UniqueIdentifier>{b52e0840-ec0b-4060-a029-a1450d6426c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\audio">
+      <UniqueIdentifier>{33aa77ea-8a3d-4f10-a4a4-35660f5013e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\file">
+      <UniqueIdentifier>{baf0d519-8657-4fe2-ba34-513faa23fa11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\logger">
+      <UniqueIdentifier>{3e7bdf30-ae2b-4128-b673-5c3a0a7578f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\math">
+      <UniqueIdentifier>{61a88ffd-3575-4729-9044-6d32fa32acc0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\memory">
+      <UniqueIdentifier>{3e63e82b-3409-4465-a63d-225cf7b9886e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\pad">
+      <UniqueIdentifier>{3aa59914-f3e8-408e-bbf8-56a43b122acb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\patcher">
+      <UniqueIdentifier>{40c38807-f89a-464a-85d0-9dae15de3c83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\resolve">
+      <UniqueIdentifier>{76f982c1-7cc2-4a85-baf3-43acccf20c93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\string">
+      <UniqueIdentifier>{c7586a2f-d22d-429d-ad7b-f28a08e5dcc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\thread">
+      <UniqueIdentifier>{181277f2-3924-4684-a5db-c3f3278bc478}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\memory\allocation">
+      <UniqueIdentifier>{df6ebe1d-dc7d-4986-a210-67f33f20b479}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\network\http.cpp" />
-    <ClCompile Include="source\network\sockets.cpp" />
-    <ClCompile Include="source\system\file\filesystem.cpp" />
-    <ClCompile Include="source\system\logger\logger.cpp" />
-    <ClCompile Include="source\system\memory\memory.cpp" />
-    <ClCompile Include="source\system\memory\allocation\memory_allocators.cpp" />
-    <ClCompile Include="source\system\resolve\resolve.cpp" />
-    <ClCompile Include="source\system\string\string.cpp" />
-    <ClCompile Include="source\system\thread\thread.cpp" />
-    <ClCompile Include="source\system\math\math.cpp" />
-    <ClCompile Include="source\hooking\manager.cpp" />
-    <ClCompile Include="source\system\patcher\patcher.cpp" />
-    <ClCompile Include="source\system\pad\pad.cpp" />
-    <ClCompile Include="source\system\audio\player.cpp" />
-    <ClCompile Include="source\system\audio\wav.cpp" />
     <ClCompile Include="source\stdafx.cpp" />
-    <ClCompile Include="source\system\memory\pattern.cpp" />
+    <ClCompile Include="source\network\http.cpp">
+      <Filter>src\network</Filter>
+    </ClCompile>
+    <ClCompile Include="source\network\sockets.cpp">
+      <Filter>src\network</Filter>
+    </ClCompile>
+    <ClCompile Include="source\hooking\manager.cpp">
+      <Filter>src\hooking</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\audio\player.cpp">
+      <Filter>src\system\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\audio\wav.cpp">
+      <Filter>src\system\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\file\filesystem.cpp">
+      <Filter>src\system\file</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\logger\logger.cpp">
+      <Filter>src\system\logger</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\memory\memory.cpp">
+      <Filter>src\system\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\memory\allocation\memory_allocators.cpp">
+      <Filter>src\system\memory\allocation</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\memory\pattern.cpp">
+      <Filter>src\system\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\patcher\patcher.cpp">
+      <Filter>src\system\patcher</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\pad\pad.cpp">
+      <Filter>src\system\pad</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\resolve\resolve.cpp">
+      <Filter>src\system\resolve</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\string\string.cpp">
+      <Filter>src\system\string</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\thread\thread.cpp">
+      <Filter>src\system\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="source\system\math\math.cpp">
+      <Filter>src\system\math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\network\http.h" />
-    <ClInclude Include="source\network\sockets.h" />
-    <ClInclude Include="source\system\file\filesystem.h" />
-    <ClInclude Include="source\system\logger\logger.h" />
-    <ClInclude Include="source\system\memory\memory.h" />
-    <ClInclude Include="source\system\memory\allocation\memory_allocators.h" />
-    <ClInclude Include="source\system\resolve\resolve.h" />
-    <ClInclude Include="source\system\string\string.h" />
-    <ClInclude Include="source\system\thread\thread.h" />
-    <ClInclude Include="source\system\math\math.h" />
-    <ClInclude Include="source\hooking\manager.h" />
-    <ClInclude Include="source\system\patcher\patcher.h" />
-    <ClInclude Include="source\system\pad\pad.h" />
-    <ClInclude Include="source\system\audio\player.h" />
-    <ClInclude Include="source\system\audio\wav.h" />
     <ClInclude Include="source\stdafx.h" />
-    <ClInclude Include="source\system\memory\pattern.h" />
+    <ClInclude Include="source\network\http.h">
+      <Filter>src\network</Filter>
+    </ClInclude>
+    <ClInclude Include="source\network\sockets.h">
+      <Filter>src\network</Filter>
+    </ClInclude>
+    <ClInclude Include="source\hooking\manager.h">
+      <Filter>src\hooking</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\audio\player.h">
+      <Filter>src\system\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\audio\wav.h">
+      <Filter>src\system\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\file\filesystem.h">
+      <Filter>src\system\file</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\logger\logger.h">
+      <Filter>src\system\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\memory\memory.h">
+      <Filter>src\system\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\memory\allocation\memory_allocators.h">
+      <Filter>src\system\memory\allocation</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\memory\pattern.h">
+      <Filter>src\system\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\patcher\patcher.h">
+      <Filter>src\system\patcher</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\pad\pad.h">
+      <Filter>src\system\pad</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\resolve\resolve.h">
+      <Filter>src\system\resolve</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\string\string.h">
+      <Filter>src\system\string</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\thread\thread.h">
+      <Filter>src\system\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\math\math.h">
+      <Filter>src\system\math</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
