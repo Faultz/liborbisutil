@@ -4,20 +4,21 @@
 
 namespace liborbisutil
 {
-	class file_system
+	class file
+
 	{
 	public:
-		file_system() = default;
-		file_system(std::string file, std::string mode);
-		file_system(std::string file, int mode);
+		file() = default;
+		file(std::string file, std::string mode);
+		file(std::string file, int mode);
 
-		~file_system();
+		~file();
 
-		file_system& operator<<(const char* buf);
-		file_system& operator<<(const std::string& buf);
-		file_system& operator<<(const int& buf);
-		file_system& operator<<(const float& buf);
-		file_system& operator<<(const double& buf);
+		file& operator<<(const char* buf);
+		file& operator<<(const std::string& buf);
+		file& operator<<(const int& buf);
+		file& operator<<(const float& buf);
+		file& operator<<(const double& buf);
 
 		operator bool();
 		operator FILE* () { return reinterpret_cast<FILE*>(this); }
