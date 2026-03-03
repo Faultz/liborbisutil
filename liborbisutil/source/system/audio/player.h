@@ -1,9 +1,10 @@
 #pragma once
 
 // Audio player - standard includes provided by stdafx.h
-// Depends on: wav
+// Depends on: wav, ajm_mp3_decoder
 
 #include "wav.h"
+#include "ajm_mp3_decoder.h"
 
 namespace liborbisutil
 {
@@ -32,14 +33,13 @@ namespace liborbisutil
 			void set_loop(bool loop);
 			bool is_playing() const;
 
-			std::string fileName;
-
-		private:
-			friend class player; // Allow player to access read_samples
-
 			// This is now the core method for providing samples to the player.
 			// It reads from internal buffers and triggers decoding new chunks as needed.
 			size_t read_samples(float* buffer, size_t frames_to_read);
+
+			std::string fileName;
+		private:
+			friend class player; // Allow player to access read_samples
 
 			// New: Core streaming function to read and process the next block from the file.
 			bool decode_chunk();
@@ -73,6 +73,15 @@ namespace liborbisutil
 			std::vector<float> decoded_buffer;   // Holds float-converted data
 			std::vector<float> resampled_buffer; // Holds final, resampled stereo data ready for the player
 			size_t resampled_buffer_read_pos = 0;   // Current read position in resampled_buffer
+
+			// MP3-specific (source_format == FORMAT_MP3)
+			static constexpr uint16_t FORMAT_MP3 = 0x0055;
+			// Streaming: keep the file open and read one chunk per decode_chunk() call.
+			// Total per-track overhead: ~10 KB (mp3_read_buf) + ~18 KB (stack pcm_buf during decode).
+			FILE*                mp3_file        = nullptr;
+			std::vector<uint8_t> mp3_read_buf;   // Fixed read buffer (SCE_AJM_DEC_MP3_MAX_INPUT_BUFFER_SIZE)
+			size_t               mp3_carry_bytes = 0; // Unconsumed bytes at start of mp3_read_buf from last decode
+			ajm::mp3_decoder     mp3_dec;  // Per-track AJM hardware decoder instance
 		};
 
 		class player
@@ -95,6 +104,15 @@ namespace liborbisutil
 
 			std::shared_ptr<track> get_track(const std::string& filename);
 			bool has_track(const std::string& filename) const;
+
+			void set_callback(std::function<void(const float*, uint32_t)> callback)
+			{
+				write_callback = std::move(callback);
+			}
+
+			// Optional callback invoked each audio frame with the raw stereo float mix (48 kHz, BUFFER_FRAMES frames).
+			// Register before the player thread starts. Called from the audio thread.
+			std::function<void(const float*, uint32_t)> write_callback;
 
 			std::vector<std::shared_ptr<track>> get_tracks() const
 			{

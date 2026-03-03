@@ -3,22 +3,135 @@
 #include "../logger/logger.h"
 #include "../resolve/resolve.h"
 #include <audioout.h>
+#include <voice.h>
 
 namespace liborbisutil
 {
 	namespace audio
 	{
-		constexpr uint32_t TARGET_SAMPLE_RATE = 48000;
+		constexpr uint32_t TARGET_SAMPLE_RATE = 44000;
 		constexpr uint16_t TARGET_CHANNELS = 2;
 
 		// New: Destructor to ensure file is closed
 		track::~track()
 		{
 			// The WaveFile object will close the file in its own destructor
+			if (mp3_file)
+			{
+				fclose(mp3_file);
+				mp3_file = nullptr;
+			}
+			mp3_dec.finalize();
 		}
 
 		bool track::load(const std::string& filename)
 		{
+			// Detect MP3 by file extension
+			const bool is_mp3 = filename.size() >= 4 &&
+				(filename.substr(filename.size() - 4) == ".mp3" ||
+				 filename.substr(filename.size() - 4) == ".MP3");
+
+			if (is_mp3)
+			{
+				// Close any previously open file
+				if (mp3_file) { fclose(mp3_file); mp3_file = nullptr; }
+
+				mp3_file = fopen(filename.c_str(), "rb");
+				if (!mp3_file)
+				{
+					LOG_ERROR("Failed to open MP3: %s\n", filename.c_str());
+					return false;
+				}
+
+				mp3_dec.create();
+
+				// Skip any ID3v2 tag so the probe lands on actual MP3 frame data.
+				// ID3v2 header: "ID3" + 2 version bytes + flags + 4-byte syncsafe size.
+				uint8_t id3_hdr[10] = {};
+				if (fread(id3_hdr, 1, 10, mp3_file) == 10 &&
+					id3_hdr[0] == 0x49 && id3_hdr[1] == 0x44 && id3_hdr[2] == 0x33) // "ID3"
+				{
+					// Syncsafe integer: each byte contributes 7 bits (MSB always 0).
+					const uint32_t tag_size =
+						((uint32_t)(id3_hdr[6] & 0x7f) << 21) |
+						((uint32_t)(id3_hdr[7] & 0x7f) << 14) |
+						((uint32_t)(id3_hdr[8] & 0x7f) <<  7) |
+						 (uint32_t)(id3_hdr[9] & 0x7f);
+					fseek(mp3_file, 10 + (long)tag_size, SEEK_SET);
+				}
+				else
+				{
+					fseek(mp3_file, 0, SEEK_SET); // not ID3v2 - rewind and probe from start
+				}
+
+				// Record start of audio data (after ID3 tag, if any) for loop/seek.
+				data_start_offset = static_cast<uintptr_t>(ftell(mp3_file));
+
+				// Read a probe buffer to find the first valid MPEG Layer III frame header.
+				constexpr size_t PROBE_SIZE = 4096;
+				uint8_t probe[PROBE_SIZE];
+				const size_t probe_read = fread(probe, 1, PROBE_SIZE, mp3_file);
+
+				// MPEG Layer III header parser - no AJM dependency, safe before sceAjmInitialize().
+				// Sample rate table: [mpeg_idx][sr_idx] where 0=MPEG1, 1=MPEG2, 2=MPEG2.5
+				static const uint32_t sr_table[3][3] = {
+					{ 44100, 48000, 32000 }, // MPEG 1
+					{ 22050, 24000, 16000 }, // MPEG 2
+					{ 11025, 12000,  8000 }, // MPEG 2.5
+				};
+				uint32_t native_rate     = 44100;
+				uint32_t native_channels = 2;
+				bool parsed = false;
+				for (size_t scan = 0; scan + 3 < probe_read && !parsed; ++scan)
+				{
+					if (probe[scan] != 0xFF || (probe[scan + 1] & 0xE0) != 0xE0) continue;
+					const int mpeg_ver = (probe[scan + 1] >> 3) & 0x3; // 3=MPEG1, 2=MPEG2, 0=MPEG2.5, 1=rsvd
+					const int layer    = (probe[scan + 1] >> 1) & 0x3; // must be 1 (Layer III)
+					if (layer != 1 || mpeg_ver == 1) continue;
+					const int sr_idx   = (probe[scan + 2] >> 2) & 0x3;
+					if (sr_idx == 3) continue; // reserved
+					const int mpeg_idx = (mpeg_ver == 3) ? 0 : (mpeg_ver == 2) ? 1 : 2;
+					native_rate     = sr_table[mpeg_idx][sr_idx];
+					native_channels = ((probe[scan + 3] >> 6) & 0x3) == 3 ? 1 : 2; // 0b11=mono
+					parsed = true;
+				}
+
+				if (!parsed)
+				{
+					LOG_ERROR("Could not parse MP3 header for %s, assuming 44100Hz stereo\n", filename.c_str());
+				}
+
+				// Seek to audio data start (past ID3 tag) so decode_chunk() reads frames.
+				fseek(mp3_file, static_cast<long>(data_start_offset), SEEK_SET);
+
+				source_format      = FORMAT_MP3;
+				source_channels    = static_cast<uint16_t>(native_channels);
+				source_bps         = 16; // AJM outputs S16
+				data_size          = 0;  // not used for streaming MP3
+
+				// Allocate the fixed-size streaming read buffer (~10 KB).
+				mp3_read_buf.resize(SCE_AJM_DEC_MP3_MAX_INPUT_BUFFER_SIZE);
+				mp3_carry_bytes = 0;
+
+				// Initialise the AJM decoder with hardware resampling to TARGET_SAMPLE_RATE.
+				if (!mp3_dec.initialize(source_channels, native_rate, TARGET_SAMPLE_RATE))
+				{
+					LOG_ERROR("Failed to initialize AJM MP3 decoder for %s\n", filename.c_str());
+					fclose(mp3_file);
+					mp3_file = nullptr;
+					return false;
+				}
+
+				// Store TARGET_SAMPLE_RATE so resample_audio() in decode_chunk() is a no-op.
+				source_sample_rate = TARGET_SAMPLE_RATE;
+
+				resampled_buffer_read_pos = 0;
+				resampled_buffer.clear();
+
+				fileName = filename;
+				return true;
+			}
+
 			if (!file.open(filename)) return false;
 			if (!file.read_header()) return false;
 
@@ -70,11 +183,21 @@ namespace liborbisutil
 		// set_position now seeks the frame position in the stream
 		void track::set_position(size_t frame_position)
 		{
-			const size_t bytes_per_frame = source_channels * (source_bps / 8);
-			const size_t total_frames = data_size / bytes_per_frame;
-
-			// Clamp position to valid range
-			this->current_frame_position = std::min(frame_position, total_frames);
+			if (source_format == FORMAT_MP3)
+			{
+				// Streaming MP3: seek the file back to the start and clear the carry buffer.
+				if (mp3_file)
+					fseek(mp3_file, static_cast<long>(data_start_offset), SEEK_SET);
+				mp3_carry_bytes = 0;
+				// current_frame_position is unused for streaming MP3 but reset for consistency.
+				current_frame_position = 0;
+			}
+			else
+			{
+				const size_t bytes_per_frame = source_channels * (source_bps / 8);
+				const size_t total_frames    = bytes_per_frame ? (data_size / bytes_per_frame) : 0;
+				current_frame_position = std::min(frame_position, total_frames);
+			}
 
 			// Invalidate the current buffer to force a read from the new file position
 			resampled_buffer_read_pos = 0;
@@ -95,9 +218,6 @@ namespace liborbisutil
 		{
 			return playing;
 		}
-
-		// The get_samples method is removed as it's not compatible with streaming.
-		// const std::vector<float>& track::get_samples() const;
 
 		void resample_audio(const std::vector<float>& input, uint32_t in_rate,
 			std::vector<float>& output, uint32_t out_rate,
@@ -170,6 +290,69 @@ namespace liborbisutil
 
 		// New: This function reads and processes the next chunk of audio from the file.
 		bool track::decode_chunk() {
+
+			if (source_format == FORMAT_MP3)
+			{
+				if (!mp3_file)
+					return false;
+
+				// Fill the read buffer: carry bytes are already at the front.
+				// Read new data from the file to fill the rest of mp3_read_buf.
+				const size_t space     = mp3_read_buf.size() - mp3_carry_bytes;
+				const size_t new_bytes = fread(mp3_read_buf.data() + mp3_carry_bytes,
+				                               1, space, mp3_file);
+				const size_t total_valid = mp3_carry_bytes + new_bytes;
+
+				if (total_valid == 0)
+				{
+					// End of file — loop or stop.
+					if (loop.load())
+					{
+						fseek(mp3_file, static_cast<long>(data_start_offset), SEEK_SET);
+						mp3_carry_bytes = 0;
+						return decode_chunk(); // retry from the start
+					}
+					return false;
+				}
+
+				// Output buffer for S16 PCM — on the stack (~18 KB, temporary).
+				int16_t pcm_buf[SCE_AJM_DEC_MP3_MAX_OUTPUT_BUFFER_SIZE / sizeof(int16_t)];
+				size_t   bytes_consumed = 0;
+				const uint32_t bytes_produced = mp3_dec.decode(
+					mp3_read_buf.data(), total_valid,
+					pcm_buf, sizeof(pcm_buf),
+					&bytes_consumed);
+
+				// Keep unconsumed bytes at the front of mp3_read_buf for the next call.
+				mp3_carry_bytes = total_valid - bytes_consumed;
+				if (mp3_carry_bytes > 0)
+					std::memmove(mp3_read_buf.data(),
+					             mp3_read_buf.data() + bytes_consumed,
+					             mp3_carry_bytes);
+
+				if (bytes_produced == 0)
+					return false; // no output this round (shouldn't normally happen)
+
+				// Convert S16 interleaved → float.
+				const size_t total_samples = bytes_produced / sizeof(int16_t);
+				decoded_buffer.resize(total_samples);
+				const float scale = 1.0f / 32768.0f;
+				for (size_t i = 0; i < total_samples; i++)
+					decoded_buffer[i] = pcm_buf[i] * scale;
+
+				// Channel conversion (e.g. mono → stereo).
+				std::vector<float> channel_converted;
+				convert_channels(decoded_buffer, source_channels, channel_converted);
+
+				// Resample — no-op: AJM already output at TARGET_SAMPLE_RATE.
+				resample_audio(channel_converted, source_sample_rate,
+				               resampled_buffer, TARGET_SAMPLE_RATE, TARGET_CHANNELS);
+
+				resampled_buffer_read_pos = 0;
+				return !resampled_buffer.empty();
+			}
+
+			// ---- WAV path ----
 			const size_t bytes_per_frame = source_channels * (source_bps / 8);
 
 			// Check if we're at the end of the data chunk.
@@ -295,9 +478,6 @@ namespace liborbisutil
 			}
 		}
 
-		// The player class implementation below remains unchanged as its logic
-		// for mixing and outputting audio is independent of how the track gets its samples.
-
 		player::~player()
 		{
 			shutdown();
@@ -364,17 +544,11 @@ namespace liborbisutil
 				audio_thread.join();
 
 			sceAudioOutOutput(main_handle, nullptr);
-
-			auto res = sceAudioOutClose(main_handle);
-			LOG_ERROR("sceAudioOutClose failed: 0x%08X\n", res);
-
+			sceAudioOutClose(main_handle);
 			main_handle = -1; 
 
 			sceAudioOutOutput(pad_handle, nullptr);
-
-			res = sceAudioOutClose(pad_handle);
-			LOG_ERROR("sceAudioOutClose failed: 0x%08X\n", res);
-
+			sceAudioOutClose(pad_handle);
 			pad_handle = -1;
 		}
 
@@ -401,6 +575,7 @@ namespace liborbisutil
 				| SCE_AUDIO_VOLUME_FLAG_CNT_CH | SCE_AUDIO_VOLUME_FLAG_LFE_CH
 				| SCE_AUDIO_VOLUME_FLAG_RL_CH | SCE_AUDIO_VOLUME_FLAG_RR_CH
 				| SCE_AUDIO_VOLUME_FLAG_BL_CH | SCE_AUDIO_VOLUME_FLAG_BR_CH, vol);
+
 		}
 
 		std::shared_ptr<track> player::get_track(const std::string& filename)
@@ -466,9 +641,16 @@ namespace liborbisutil
 					stereo_output[i] = static_cast<int16_t>(sample * 32767.0f);
 				}
 
-				// Submit to main output
-				sceAudioOutOutput(main_handle, stereo_output);
+				// Forward raw float mix to any registered voice write callback (e.g. IPort injection).
+				if (write_callback)
+					write_callback(stereo_mix, BUFFER_FRAMES);
 
+				// Submit to main output
+				auto r = sceAudioOutOutput(main_handle, stereo_output);
+				if (r < 0)
+				{
+					LOG_ERROR("sceAudioOutOutput main failed: 0x%08X\n", r);
+				}
 				// Handle pad output if connected
 				// Downmix to mono
 				for (size_t i = 0; i < BUFFER_FRAMES; i++)
