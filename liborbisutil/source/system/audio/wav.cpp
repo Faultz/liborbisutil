@@ -84,7 +84,7 @@ bool wave::read_sample(int position, char* buffer, size_t bufferSize, size_t* re
 	return read_data(position, buffer, bufferSize, read_amount);
 }
 
-bool wave::find_riff(unsigned int chunkId, liborbisutil::file_system& fs, riff_chunk* chunk)
+bool wave::find_riff(unsigned int chunkId, liborbisutil::file& fs, riff_chunk* chunk)
 {
 	uint32_t offset = 0;
 
