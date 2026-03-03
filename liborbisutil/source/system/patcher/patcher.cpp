@@ -20,17 +20,11 @@ namespace liborbisutil
 
 		void info::enable()
 		{
-			if (this->set)
-				return;
-
 			memory::write(address, patched.data(), patched.size());
 		}
 
 		void info::disable()
 		{
-			if (!this->set)
-				return;
-
 			memory::write(address, original.data(), original.size());
 		}
 
