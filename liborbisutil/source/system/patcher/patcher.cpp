@@ -172,5 +172,17 @@ namespace liborbisutil
 			if (it != internal::patches.end())
 				internal::patches.erase(it);
 		}
+
+		void enable_all()
+		{
+			for (auto& [name, patch] : internal::patches)
+				patch->enable();
+		}
+
+		void restore_all()
+		{
+			for (auto& [name, patch] : internal::patches)
+				patch->restore();
+		}
 	}
 }
