@@ -77,6 +77,7 @@
     <ClCompile Include="source\system\math\math.cpp" />
     <ClCompile Include="source\network\http.cpp" />
     <ClCompile Include="source\network\sockets.cpp" />
+    <ClCompile Include="source\system\audio\ajm_mp3_decoder.cpp" />
     <ClCompile Include="source\system\audio\player.cpp" />
     <ClCompile Include="source\system\audio\wav.cpp" />
     <ClCompile Include="source\system\file\filesystem.cpp" />
@@ -97,6 +98,7 @@
     <ClInclude Include="source\system\math\math.h" />
     <ClInclude Include="source\network\http.h" />
     <ClInclude Include="source\network\sockets.h" />
+    <ClInclude Include="source\system\audio\ajm_mp3_decoder.h" />
     <ClInclude Include="source\system\audio\player.h" />
     <ClInclude Include="source\system\audio\wav.h" />
     <ClInclude Include="source\system\file\filesystem.h" />
