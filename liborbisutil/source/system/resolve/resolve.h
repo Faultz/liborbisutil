@@ -42,8 +42,10 @@ namespace liborbisutil
 		template<typename T = uintptr_t>
 		T get_absolute_address(uintptr_t address, uintptr_t base = -1)
 		{
+			static uintptr_t proc_base = get_process_base();
+
 			if (base == -1)
-				base = get_process_base();
+				base = proc_base;
 
 			return reinterpret_cast<T>(base + address);
 		}
