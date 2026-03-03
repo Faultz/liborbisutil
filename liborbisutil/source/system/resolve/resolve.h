@@ -72,6 +72,20 @@ namespace liborbisutil
 		}
 
 		template<typename T = uintptr_t>
+		T get_module_address(int moduleId, uint64_t offset = 0)
+		{
+			SceKernelModuleInfo moduleInfo;
+			moduleInfo.size = sizeof(SceKernelModuleInfo);
+			if (sceKernelGetModuleInfo(moduleId, &moduleInfo) < 0)
+			{
+				printf("sceKernelGetModuleInfo(%d) failed\n", moduleId);
+				return 0;
+			}
+
+			return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(moduleInfo.segmentInfo->address) + offset);
+		}
+
+		template<typename T = uintptr_t>
 		T get_module_address(const std::string& module, const std::string& function)
 		{
 			return (T)get_export_address(module, function);
