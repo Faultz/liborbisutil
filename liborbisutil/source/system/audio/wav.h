@@ -56,7 +56,7 @@ public:
 	riff_chunk data;
 	fmt_data format;
 	float duration;
-	liborbisutil::file_system fs;
+	liborbisutil::file fs;
 
 	wave() {}
 	~wave() {}
@@ -78,5 +78,5 @@ public:
 
 	bool read_data(int offset, char* data, size_t dataSize, size_t* read_amount);
 	bool read_sample(int position, char* buffer, size_t bufferSize, size_t* read_amount);
-	bool find_riff(unsigned int chunkId, liborbisutil::file_system& fs, riff_chunk* chunk);
+	bool find_riff(unsigned int chunkId, liborbisutil::file& fs, riff_chunk* chunk);
 };

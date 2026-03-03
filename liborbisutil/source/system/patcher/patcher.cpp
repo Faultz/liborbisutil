@@ -20,17 +20,11 @@ namespace liborbisutil
 
 		void info::enable()
 		{
-			if (this->set)
-				return;
-
 			memory::write(address, patched.data(), patched.size());
 		}
 
 		void info::disable()
 		{
-			if (!this->set)
-				return;
-
 			memory::write(address, original.data(), original.size());
 		}
 
@@ -177,6 +171,18 @@ namespace liborbisutil
 			auto it = internal::patches.find(name);
 			if (it != internal::patches.end())
 				internal::patches.erase(it);
+		}
+
+		void enable_all()
+		{
+			for (auto& [name, patch] : internal::patches)
+				patch->enable();
+		}
+
+		void restore_all()
+		{
+			for (auto& [name, patch] : internal::patches)
+				patch->restore();
 		}
 	}
 }

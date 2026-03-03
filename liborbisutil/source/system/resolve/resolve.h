@@ -42,8 +42,10 @@ namespace liborbisutil
 		template<typename T = uintptr_t>
 		T get_absolute_address(uintptr_t address, uintptr_t base = -1)
 		{
+			static uintptr_t proc_base = get_process_base();
+
 			if (base == -1)
-				base = get_process_base();
+				base = proc_base;
 
 			return reinterpret_cast<T>(base + address);
 		}
@@ -63,6 +65,20 @@ namespace liborbisutil
 			if (sceKernelGetModuleInfo(library, &moduleInfo) < 0)
 			{
 				printf("sceKernelGetModuleInfo(%s) failed\n", module.c_str());
+				return 0;
+			}
+
+			return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(moduleInfo.segmentInfo->address) + offset);
+		}
+
+		template<typename T = uintptr_t>
+		T get_module_address(int moduleId, uint64_t offset = 0)
+		{
+			SceKernelModuleInfo moduleInfo;
+			moduleInfo.size = sizeof(SceKernelModuleInfo);
+			if (sceKernelGetModuleInfo(moduleId, &moduleInfo) < 0)
+			{
+				printf("sceKernelGetModuleInfo(%d) failed\n", moduleId);
 				return 0;
 			}
 

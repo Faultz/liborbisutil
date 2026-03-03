@@ -312,7 +312,7 @@ namespace liborbisutil
 					return response();
 				}
 
-				file_system out(path, "w");
+				file out(path, "w");
 				if (!out.is_open())
 				{
 					LOG_ERROR("Failed to open file: %s\n", path.data());

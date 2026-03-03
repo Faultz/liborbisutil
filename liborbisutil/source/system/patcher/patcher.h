@@ -43,5 +43,8 @@ namespace liborbisutil
 		info* add(const std::string& name, uintptr_t address, const std::vector<uint8_t>& patched, const bool set = false);
 
 		void remove(const std::string& name);
+
+		void enable_all();
+		void restore_all();
 	}
 }

@@ -58,75 +58,75 @@ namespace liborbisutil
 		return buffer.st_size;
 	}
 
-	file_system::file_system(std::string file, std::string mode)
+	file::file(std::string file, std::string mode)
 	{
 		open(file, mode);
 	}
 
-	file_system::file_system(std::string file, int mode)
+	file::file(std::string file, int mode)
 	{
 		open(file, mode);
 	}
 
-	file_system::~file_system()
+	file::~file()
 	{
 		if (is_open())
 			close();
 	}
 
-	file_system& file_system::operator<<(const char* buf)
+	file& file::operator<<(const char* buf)
 	{
 		print(buf);
 		return *this;
 	}
 
-	file_system& file_system::operator<<(const std::string& buf)
+	file& file::operator<<(const std::string& buf)
 	{
 		print(buf.c_str());
 		return *this;
 	}
 
-	file_system& file_system::operator<<(const int& buf)
+	file& file::operator<<(const int& buf)
 	{
 		write(&buf, sizeof(int));
 		return *this;
 	}
 
-	file_system& file_system::operator<<(const float& buf)
+	file& file::operator<<(const float& buf)
 	{
 		write(&buf, sizeof(float));
 		return *this;
 	}
 
-	file_system& file_system::operator<<(const double& buf)
+	file& file::operator<<(const double& buf)
 	{
 		write(&buf, sizeof(double));
 		return *this;
 	}
 
-	file_system::operator bool()
+	file::operator bool()
 	{
 		return (tell() < length);
 	}
 
-	bool file_system::is_open()
+	bool file::is_open()
 	{
 		return fd >= 0;
 	}
 
-	bool file_system::is_good()
+	bool file::is_good()
 	{
 		if (tell() > length)
 			return false;
 		return true;
 	}
 
-	size_t file_system::get_size()
+	size_t file::get_size()
 	{
 		return length;
 	}
 
-	std::string file_system::read_to_end()
+	std::string file::read_to_end()
 	{
 		std::string buffer;
 		buffer.resize(length);
@@ -134,7 +134,7 @@ namespace liborbisutil
 		return buffer;
 	}
 
-	int file_system::open(const std::string& path, std::string mode)
+	int file::open(const std::string& path, std::string mode)
 	{
 		name = path;
 
@@ -163,7 +163,7 @@ namespace liborbisutil
 		return fd;
 	}
 
-	int file_system::open(const std::string& path, int mode)
+	int file::open(const std::string& path, int mode)
 	{
 		fd = sceKernelOpen(path.data(), mode, 0777);
 		if (fd < 0)
@@ -183,7 +183,7 @@ namespace liborbisutil
 		return fd;
 	}
 
-	size_t file_system::read(const void* buf, size_t length, size_t count)
+	size_t file::read(const void* buf, size_t length, size_t count)
 	{
 		size_t amount = sceKernelRead(fd, (void*)buf, length * count);
 		if (amount < 0)
@@ -195,7 +195,7 @@ namespace liborbisutil
 		return amount;
 	}
 
-	size_t file_system::readOffset(void* data, size_t length, size_t offset)
+	size_t file::readOffset(void* data, size_t length, size_t offset)
 	{
 		if (fd < 0)
 		{
@@ -219,7 +219,7 @@ namespace liborbisutil
 		return res;
 	}
 
-	size_t file_system::print(const char* format, ...)
+	size_t file::print(const char* format, ...)
 	{
 		va_list args;
 		va_start(args, format);
@@ -231,7 +231,7 @@ namespace liborbisutil
 		return write(str.data(), str.size());
 	}
 
-	size_t file_system::write(const void* buf, size_t length, size_t count)
+	size_t file::write(const void* buf, size_t length, size_t count)
 	{
 		size_t amount = sceKernelWrite(fd, buf, length * count);
 		if (amount < 0)
@@ -242,7 +242,7 @@ namespace liborbisutil
 		return amount;
 	}
 
-	size_t file_system::seek(size_t offset, int whence)
+	size_t file::seek(size_t offset, int whence)
 	{
 		auto res = sceKernelLseek(fd, offset, whence);
 		if (res < 0)
@@ -256,7 +256,7 @@ namespace liborbisutil
 		return res;
 	}
 
-	size_t file_system::tell()
+	size_t file::tell()
 	{
 		auto res = sceKernelLseek(fd, 0, SCE_KERNEL_SEEK_CUR);
 		if (res < 0)
@@ -267,7 +267,7 @@ namespace liborbisutil
 		return res;
 	}
 
-	bool file_system::getline(std::string& line, char delimeter)
+	bool file::getline(std::string& line, char delimeter)
 	{
 		if (fd < 0)
 		{
@@ -297,7 +297,7 @@ namespace liborbisutil
 		return false;
 	}
 
-	void file_system::close()
+	void file::close()
 	{
 		sceKernelClose(fd);
 	}

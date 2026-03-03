@@ -100,6 +100,9 @@
     <ClCompile Include="source\system\math\math.cpp">
       <Filter>src\system\math</Filter>
     </ClCompile>
+    <ClCompile Include="source\system\audio\ajm_mp3_decoder.cpp">
+      <Filter>src\system\audio</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\stdafx.h" />
@@ -153,6 +156,9 @@
     </ClInclude>
     <ClInclude Include="include\liborbisutil.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="source\system\audio\ajm_mp3_decoder.h">
+      <Filter>src\system\audio</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
