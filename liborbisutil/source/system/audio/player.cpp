@@ -9,7 +9,7 @@ namespace liborbisutil
 {
 	namespace audio
 	{
-		constexpr uint32_t TARGET_SAMPLE_RATE = 44000;
+		constexpr uint32_t TARGET_SAMPLE_RATE = 48000;
 		constexpr uint16_t TARGET_CHANNELS = 2;
 
 		// New: Destructor to ensure file is closed

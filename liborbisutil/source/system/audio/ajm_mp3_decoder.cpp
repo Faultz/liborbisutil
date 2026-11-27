@@ -53,7 +53,7 @@ namespace ajm
 
         if (do_resample)
         {
-            const float ratio = static_cast<float>(target_rate) / static_cast<float>(source_rate);
+            const float ratio = static_cast<float>(source_rate) / static_cast<float>(target_rate);
 
             alignas(8) uint8_t batch_buf[SCE_AJM_JOB_SET_RESAMPLE_PARAMETERS_SIZE];
             SceAjmBatchInfo batch;
